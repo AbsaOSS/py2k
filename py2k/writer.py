@@ -48,6 +48,7 @@ class KafkaWriter(object):
             schema_registry_config)
         self.producer_config = producer_config
         self.key = key
+        self._serializer = KafkaSerializer(key)
 
     def __del__(self):
         if self.producer:
@@ -79,7 +80,7 @@ class KafkaWriter(object):
         """
         if err is not None:
             print(
-                "Delivery failed for record {}: {}".format(msg.key(), err)
+                "Delivery failed for record {}: {}".format(msg.serialize_key(), err)
             )
 
     def _create_value_serializer(self, data):
@@ -148,10 +149,7 @@ class KafkaWriter(object):
     def _to_kafka(self, result: KafkaModel):
         while True:
             try:
-                if self.key:
-                    key = {self.key: result.dict()[self.key]}
-                else:
-                    key = self._assign_key()
+                key = self._serializer.serialize_key(result)
                 self.producer.produce(topic=self.topic,
                                       key=key,
                                       value=result,
@@ -167,3 +165,27 @@ class KafkaWriter(object):
     def _get_schema_string(results: Union[List[KafkaModel], KafkaModel]):
         return results[0].schema_json()
 
+
+class KafkaSerializer:
+    def __init__(self, key):
+        self._key = key
+
+    def serialize_key(self, item):
+        if self._key:
+            return {self._key: item.dict()[self._key]}
+        else:
+            return self._assign_key()
+
+    @property
+    def producer(self):
+        pass
+
+    def assign_key(self):
+        pass
+
+    def delivery_report(self):
+        pass
+
+    def _assign_key(self):
+        if not self.serialize_key:
+            return str(uuid4())
