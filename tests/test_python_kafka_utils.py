@@ -99,7 +99,7 @@ def test_kafka_model(data_class):
     expected = {
         'type': 'record',
                 'name': 'ModelResult',
-                'namespace': 'absa.kafkautils.modelresult',
+                'namespace': 'python.kafka.modelresult',
                 'fields': [
                     {'type': 'string', 'name': 'Customerkey'},
                     {'type': 'double', 'name': 'Predictedvalue'},
