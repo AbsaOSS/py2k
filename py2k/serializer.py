@@ -29,11 +29,11 @@ class KafkaSerializer:
     def produce(self, item):
         while True:
             try:
-                key = self._serialize_key(item)
+                key = self._key_object(item)
 
                 self._producer.produce(
                     topic=self._topic,
-                    key=self._serialize_key(item),
+                    key=key,
                     value=item,
                     on_delivery=self._delivery_report
                 )
@@ -48,14 +48,10 @@ class KafkaSerializer:
         if self._producer:
             self._producer.flush()
 
-    def _serialize_key(self, item):
+    def _key_object(self, item):
         if self._key:
             return {self._key: item.dict()[self._key]}
         else:
-            return self._assign_key()
-
-    def _assign_key(self):
-        if not self._key:
             return str(uuid4())
 
     @staticmethod
