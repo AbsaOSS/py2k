@@ -37,9 +37,9 @@ class KafkaWriter(object):
          `confluent_kafka.SerializingProducer`
         :type producer_config: dict
         """
-        self.topic = topic
-        self.producer_config = producer_config
-        self.key = key
+        self._topic = topic
+        self._default_producer_config = producer_config
+        self._key = key
         self._schema_registry_config = schema_registry_config
         self._serializer = None
 
@@ -48,8 +48,8 @@ class KafkaWriter(object):
             self.producer.flush()
 
     def _create_serializer(self, data):
-        producer_config = ProducerConfig(self.key, self.producer_config, self._schema_registry_config, data)
-        self._serializer = KafkaSerializer(self.topic, self.key, producer_config)
+        producer_config = ProducerConfig(self._key, self._default_producer_config, self._schema_registry_config, data)
+        self._serializer = KafkaSerializer(self._topic, self._key, producer_config)
 
     def write(self, data):
         self._create_serializer(data)
