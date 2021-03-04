@@ -23,8 +23,8 @@ import datetime
 import pandas as pd
 
 
-import py2k.writer
-import py2k._writer_config
+import py2k.serializer
+import py2k.producer_config
 from py2k.writer import KafkaWriter
 from py2k.models import KafkaModel
 
@@ -144,8 +144,8 @@ def test_writer_pushes_one_item_of_model_data(monkeypatch, data_class):
     producer = MagicMock()
     producer_class.return_value = producer
 
-    monkeypatch.setattr(py2k.writer, 'SerializingProducer', producer_class)
-    monkeypatch.setattr(py2k._writer_config, 'SchemaRegistryClient', MagicMock())
+    monkeypatch.setattr(py2k.serializer, 'SerializingProducer', producer_class)
+    monkeypatch.setattr(py2k.producer_config, 'SchemaRegistryClient', MagicMock())
 
     writer = KafkaWriter(topic, {}, {}, key)
     writer.write(one_item_list)
@@ -165,8 +165,8 @@ def test_writer_pushes_one_item_of_model_data_without_key(monkeypatch, data_clas
     producer = MagicMock()
     producer_class.return_value = producer
 
-    monkeypatch.setattr(py2k.writer, 'SerializingProducer', producer_class)
-    monkeypatch.setattr(py2k._writer_config, 'SchemaRegistryClient', MagicMock())
+    monkeypatch.setattr(py2k.serializer, 'SerializingProducer', producer_class)
+    monkeypatch.setattr(py2k.producer_config, 'SchemaRegistryClient', MagicMock())
 
     writer = KafkaWriter(topic, {}, {})
     writer.write(one_item_list)

@@ -14,14 +14,12 @@
  limitations under the License.
  """
 
-from typing import Any, Dict, List
-from uuid import uuid4
+from typing import Any, Dict
 
-from confluent_kafka.serializing_producer import SerializingProducer
 from tqdm import tqdm
 
-from py2k._writer_config import ProducerConfig
-from py2k.models import KafkaModel
+from py2k.producer_config import ProducerConfig
+from py2k.serializer import KafkaSerializer
 
 
 class KafkaWriter(object):
@@ -38,87 +36,22 @@ class KafkaWriter(object):
         :param producer_config: a dictionary compatible with the
          `confluent_kafka.SerializingProducer`
         :type producer_config: dict
-        :param result_class: A statically typed result class
-        :type result_class: Union[object, List[object]]
         """
         self.topic = topic
         self.producer_config = producer_config
         self.key = key
         self._schema_registry_config = schema_registry_config
-        self._serializer = KafkaSerializer(key)
+        self._serializer = None
 
     def __del__(self):
         if self.producer:
             self.producer.flush()
 
-    @staticmethod
-    def delivery_report(err, msg):
-        """
-        Reports the failure or success of a message delivery.
-
-        Note:
-            In the delivery report callback the Message.key()
-            and Message.value() will be the binary format as
-            encoded by any configured Serializers and
-            not the same object that was passed to produce().
-            If you wish to pass the original object(s)
-            for key and value to delivery
-            report callback we recommend a bound callback
-            or lambda where you pass the objects along.
-
-        :param err: The error that occurred on None on success.
-        :type err: KafkaError
-        :param msg: The message that was produced or failed.
-        :type msg: Message
-        """
-        if err is not None:
-            print(
-                "Delivery failed for record {}: {}".format(msg.serialize_key(), err)
-            )
-
-    def _create_producer(self, data):
+    def _create_serializer(self, data):
         producer_config = ProducerConfig(self.key, self.producer_config, self._schema_registry_config, data)
-        self.producer = SerializingProducer(producer_config.get())
+        self._serializer = KafkaSerializer(self.topic, self.key, producer_config)
 
     def write(self, data):
-        self._create_producer(data)
-
-        self._write_list(data)
-
-    def _write_list(self, results: List[KafkaModel]):
-        for result in tqdm(results):
-            self._to_kafka(result)
-
-    def _to_kafka(self, result: KafkaModel):
-        while True:
-            try:
-                key = self._serializer.serialize_key(result)
-                self.producer.produce(topic=self.topic,
-                                      key=key,
-                                      value=result,
-                                      on_delivery=self.delivery_report)
-                self.producer.poll(0)
-                break
-            except BufferError as e:
-                print(
-                    f'Failed to send on attempt {key}. Error received {str(e)}')
-                self.producer.poll(1)
-
-
-class KafkaSerializer:
-    def __init__(self, key):
-        self._key = key
-
-    def serialize_key(self, item):
-        if self._key:
-            return {self._key: item.dict()[self._key]}
-        else:
-            return self._assign_key()
-
-    @property
-    def producer(self):
-        return self._producer
-
-    def _assign_key(self):
-        if not self._key:
-            return str(uuid4())
+        self._create_serializer(data)
+        for item in tqdm(data):
+            self._serializer.produce(item)

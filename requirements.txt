@@ -17,3 +17,4 @@ pytest == 4.6.5
 
 # python-kafka-utils/setup.py: 5
 setuptools >= 49.2.1
+tqdm~=4.58.0
