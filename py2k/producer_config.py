@@ -60,13 +60,13 @@ class ProducerConfig:
             return {}
 
         avro_key_serializer = AvroSerializer(
-            schema_str=self.key_schema_string,
+            schema_str=self._key_schema_string,
             schema_registry_client=self.schema_registry_client
         )
         return {'key.serializer': avro_key_serializer}
 
     @property
-    def key_schema_string(self):
+    def _key_schema_string(self):
         key_schema = {}
         _value_schema = json.loads(self._value_schema_string)
         key_schema['type'] = _value_schema['type']
