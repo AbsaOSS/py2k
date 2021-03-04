@@ -24,6 +24,7 @@ import pandas as pd
 
 
 import py2k.writer
+import py2k._writer_config
 from py2k.writer import KafkaWriter
 from py2k.models import KafkaModel
 
@@ -144,7 +145,7 @@ def test_writer_pushes_one_item_of_model_data(monkeypatch, data_class):
     producer_class.return_value = producer
 
     monkeypatch.setattr(py2k.writer, 'SerializingProducer', producer_class)
-    monkeypatch.setattr(py2k.writer, 'SchemaRegistryClient', MagicMock())
+    monkeypatch.setattr(py2k._writer_config, 'SchemaRegistryClient', MagicMock())
 
     writer = KafkaWriter(topic, {}, {}, key)
     writer.write(one_item_list)
@@ -152,4 +153,23 @@ def test_writer_pushes_one_item_of_model_data(monkeypatch, data_class):
     expected_key = {key: getattr(one_item, key)}
 
     producer.produce.assert_called_with(topic=topic, key=expected_key, value=one_item, on_delivery=ANY)
+    producer.poll.assert_called_with(0)
+
+
+def test_writer_pushes_one_item_of_model_data_without_key(monkeypatch, data_class):
+    topic = "DUMMY_TOPIC"
+    one_item = data_class[0]
+    one_item_list = [one_item]
+
+    producer_class = MagicMock()
+    producer = MagicMock()
+    producer_class.return_value = producer
+
+    monkeypatch.setattr(py2k.writer, 'SerializingProducer', producer_class)
+    monkeypatch.setattr(py2k._writer_config, 'SchemaRegistryClient', MagicMock())
+
+    writer = KafkaWriter(topic, {}, {})
+    writer.write(one_item_list)
+
+    producer.produce.assert_called_with(topic=topic, key=ANY, value=one_item, on_delivery=ANY)
     producer.poll.assert_called_with(0)
