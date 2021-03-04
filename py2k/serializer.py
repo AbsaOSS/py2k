@@ -27,6 +27,10 @@ class KafkaSerializer:
                     f'Failed to send on attempt {key}. Error received {str(e)}')
                 self._producer.poll(1)
 
+    def flush(self):
+        if self._producer:
+            self._producer.flush()
+
     def _serialize_key(self, item):
         if self._key:
             return {self._key: item.dict()[self._key]}

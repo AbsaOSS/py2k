@@ -43,10 +43,6 @@ class KafkaWriter(object):
         self._schema_registry_config = schema_registry_config
         self._serializer = None
 
-    def __del__(self):
-        if self.producer:
-            self.producer.flush()
-
     def _create_serializer(self, data):
         producer_config = ProducerConfig(self._key, self._default_producer_config, self._schema_registry_config, data)
         self._serializer = KafkaSerializer(self._topic, self._key, producer_config)
@@ -55,3 +51,5 @@ class KafkaWriter(object):
         self._create_serializer(data)
         for item in tqdm(data):
             self._serializer.produce(item)
+
+        self._serializer.flush()
