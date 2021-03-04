@@ -15,7 +15,6 @@
  """
 
 import json
-from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Union
 from uuid import uuid4
 
@@ -85,12 +84,12 @@ class KafkaWriter(object):
 
     def _create_value_serializer(self, data):
         self.value_schema_string = self._get_schema_string(data)
-        self.avro_value_serializer = AvroSerializer(
+        avro_value_serializer = AvroSerializer(
             self.value_schema_string,
             self.schema_registry_client,
             to_dict=self._results_to_dict)
         self.producer_config.update({
-            'value.serializer': self.avro_value_serializer
+            'value.serializer': avro_value_serializer
         })
 
     def _create_key_serializer(self):
@@ -132,9 +131,6 @@ class KafkaWriter(object):
                     final.append(field)
         return final
 
-    def set_key(self, key: str):
-        self.key = key
-
     def _assign_key(self):
         if not self.key:
             return str(uuid4())
@@ -143,10 +139,7 @@ class KafkaWriter(object):
         self.create_producer(data)
         self._create_key_serializer()
 
-        if isinstance(data, list) or isinstance(data, IterableAdapter):
-            self._write_list(data)
-        elif isinstance(data, KafkaModel):
-            self._write_one(data)
+        self._write_list(data)
 
     def _write_list(self, results: List[KafkaModel]):
         for result in tqdm(results):
@@ -170,14 +163,7 @@ class KafkaWriter(object):
                     f'Failed to send on attempt {key}. Error received {str(e)}')
                 self.producer.poll(1)
 
-    def _write_one(self, result: KafkaModel):
-        self._to_kafka(result)
-
     @staticmethod
     def _get_schema_string(results: Union[List[KafkaModel], KafkaModel]):
-        if isinstance(results, list):
-            return results[0].schema_json()
-        if isinstance(results, IterableAdapter):
-            return KafkaModel.schema_from_iter(results)
-        else:
-            return results.schema_json()
+        return results[0].schema_json()
+
