@@ -15,6 +15,7 @@
  """
 
 import json
+from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Union
 from uuid import uuid4
 
@@ -31,7 +32,6 @@ class KafkaWriter(object):
                  topic: str,
                  schema_registry_config: Dict[str, Any],
                  producer_config: Dict[str, Any],
-                 result_class: Union[KafkaModel, List[KafkaModel]],
                  key=None):
         """A class for easy writing of data to kafka
 
@@ -48,7 +48,6 @@ class KafkaWriter(object):
         self.schema_registry_client = SchemaRegistryClient(
             schema_registry_config)
         self.producer_config = producer_config
-        self._results = result_class
         self.key = key
 
     def __del__(self):
@@ -84,8 +83,8 @@ class KafkaWriter(object):
                 "Delivery failed for record {}: {}".format(msg.key(), err)
             )
 
-    def _create_value_serializer(self):
-        self.value_schema_string = self._get_schema_string(self._results)
+    def _create_value_serializer(self, data):
+        self.value_schema_string = self._get_schema_string(data)
         self.avro_value_serializer = AvroSerializer(
             self.value_schema_string,
             self.schema_registry_client,
@@ -95,17 +94,18 @@ class KafkaWriter(object):
         })
 
     def _create_key_serializer(self):
-        self._create_key_schema()
-        self.avro_key_serializer = AvroSerializer(
-            schema_str=self.key_schema_string,
-            schema_registry_client=self.schema_registry_client
-        )
-        self.producer_config.update({
-            'key.serializer': self.avro_key_serializer
-        })
+        if self.key:
+            self._create_key_schema()
+            self.avro_key_serializer = AvroSerializer(
+                schema_str=self.key_schema_string,
+                schema_registry_client=self.schema_registry_client
+            )
+            self.producer_config.update({
+                'key.serializer': self.avro_key_serializer
+            })
 
-    def create_producer(self):
-        self._create_value_serializer()
+    def create_producer(self, data):
+        self._create_value_serializer(data)
         if self.key:
             self._create_key_serializer()
         self.producer = SerializingProducer(self.producer_config)
@@ -139,12 +139,14 @@ class KafkaWriter(object):
         if not self.key:
             return str(uuid4())
 
-    def write(self):
-        result = self._results
-        if isinstance(result, list) or isinstance(result, IterableAdapter):
-            self._write_list(result)
-        elif isinstance(result, KafkaModel):
-            self._write_one(result)
+    def write(self, data):
+        self.create_producer(data)
+        self._create_key_serializer()
+
+        if isinstance(data, list) or isinstance(data, IterableAdapter):
+            self._write_list(data)
+        elif isinstance(data, KafkaModel):
+            self._write_one(data)
 
     def _write_list(self, results: List[KafkaModel]):
         for result in tqdm(results):

@@ -15,11 +15,16 @@
  """
 
 from typing import Optional
+from unittest.mock import ANY, MagicMock
+
 import pytest
 import datetime
 
 import pandas as pd
 
+
+import py2k.writer
+from py2k.writer import KafkaWriter
 from py2k.models import KafkaModel
 
 
@@ -126,3 +131,25 @@ def test_pandas_serializer(pandas_dataframe, data_class):
     expected = data_class
 
     assert actual == expected
+
+
+def test_writer_pushes_one_item_of_model_data(monkeypatch, data_class):
+    topic = "DUMMY_TOPIC"
+    key = "Customerkey"
+    one_item = data_class[0]
+    one_item_list = [one_item]
+
+    producer_class = MagicMock()
+    producer = MagicMock()
+    producer_class.return_value = producer
+
+    monkeypatch.setattr(py2k.writer, 'SerializingProducer', producer_class)
+    monkeypatch.setattr(py2k.writer, 'SchemaRegistryClient', MagicMock())
+
+    writer = KafkaWriter(topic, {}, {}, key)
+    writer.write(one_item_list)
+
+    expected_key = {key: getattr(one_item, key)}
+
+    producer.produce.assert_called_with(topic=topic, key=expected_key, value=one_item, on_delivery=ANY)
+    producer.poll.assert_called_with(0)
