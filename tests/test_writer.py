@@ -14,19 +14,17 @@
  limitations under the License.
  """
 
+import datetime
 from typing import Optional
 from unittest.mock import ANY, MagicMock
 
-import pytest
-import datetime
-
 import pandas as pd
+import pytest
 
-
-import py2k.serializer
 import py2k.producer_config
-from py2k.writer import KafkaWriter
+import py2k.serializer
 from py2k.models import KafkaModel
+from py2k.writer import KafkaWriter
 
 
 @pytest.fixture

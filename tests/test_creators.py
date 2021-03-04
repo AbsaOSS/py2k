@@ -14,18 +14,18 @@
  limitations under the License.
  """
 
+import json
 from copy import deepcopy
 from datetime import date
 from decimal import Decimal
 from typing import Optional
 
+import pandas as pd
 import pytest
+from pydantic import BaseModel
 
 from py2k.creators import PandasModelCreator
 from py2k.models import KafkaModel
-import pandas as pd
-from pydantic import BaseModel
-import json
 
 
 class _TestData(BaseModel):

@@ -14,10 +14,11 @@
  limitations under the License.
  """
 
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 from tqdm import tqdm
 
+from py2k.models import KafkaModel
 from py2k.producer_config import ProducerConfig
 from py2k.serializer import KafkaSerializer
 
@@ -27,7 +28,7 @@ class KafkaWriter(object):
                  topic: str,
                  schema_registry_config: Dict[str, Any],
                  producer_config: Dict[str, Any],
-                 key=None):
+                 key: str = None):
         """A class for easy writing of data to kafka
 
         :param schema_registry_config: a dictionary compatible with the
@@ -43,11 +44,11 @@ class KafkaWriter(object):
         self._schema_registry_config = schema_registry_config
         self._serializer = None
 
-    def _create_serializer(self, data):
+    def _create_serializer(self, data: List[KafkaModel]):
         producer_config = ProducerConfig(self._key, self._default_producer_config, self._schema_registry_config, data)
         self._serializer = KafkaSerializer(self._topic, self._key, producer_config)
 
-    def write(self, data):
+    def write(self, data: List[KafkaModel]):
         self._create_serializer(data)
         for item in tqdm(data):
             self._serializer.produce(item)
