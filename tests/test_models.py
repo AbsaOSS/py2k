@@ -20,8 +20,8 @@ import pandas as pd
 import pytest
 from pandas._testing import assert_frame_equal
 
-import python_kafka_utils.models
-from python_kafka_utils.models import KafkaModel
+import py2k.models
+from py2k.models import KafkaModel
 
 
 def test_pandas_dynamic_creates_pandas_model_creator(model_creator_class):
@@ -63,7 +63,7 @@ def model_creator():
 def model_creator_class(monkeypatch, model_creator):
     model_creator_class = MagicMock()
     model_creator_class.return_value = model_creator
-    monkeypatch.setattr(python_kafka_utils.models,
+    monkeypatch.setattr(py2k.models,
                         'PandasModelCreator', model_creator_class)
     return model_creator_class
 

@@ -23,7 +23,7 @@ from confluent_kafka.schema_registry.avro import AvroSerializer
 from confluent_kafka.serializing_producer import SerializingProducer
 from tqdm import tqdm
 
-from python_kafka_utils.models import KafkaModel, IterableAdapter
+from py2k.models import KafkaModel, IterableAdapter
 
 
 class KafkaWriter(object):

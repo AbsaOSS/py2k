@@ -21,8 +21,8 @@ from typing import Optional
 
 import pytest
 
-from python_kafka_utils.creators import PandasModelCreator
-from python_kafka_utils.models import KafkaModel
+from py2k.creators import PandasModelCreator
+from py2k.models import KafkaModel
 import pandas as pd
 from pydantic import BaseModel
 import json

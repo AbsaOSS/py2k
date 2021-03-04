@@ -20,7 +20,7 @@ import datetime
 
 import pandas as pd
 
-from python_kafka_utils.models import KafkaModel
+from py2k.models import KafkaModel
 
 
 @pytest.fixture

@@ -56,10 +56,10 @@ setup(
     license="Apache Software license",
     long_description=readme + '\n\n' + history,
     include_package_data=True,
-    keywords='python_kafka_utils',
-    name='python_kafka_utils',
+    keywords='py2k',
+    name='py2k',
     packages=find_packages(
-        include=['python_kafka_utils', 'python_kafka_utils.*']),
+        include=['py2k', 'py2k.*']),
     setup_requires=setup_requirements,
     test_suite='tests',
     tests_require=test_requirements,

@@ -22,9 +22,9 @@ import pandas as pd
 
 from pydantic import BaseModel
 
-from python_kafka_utils.creators import PandasModelCreator
-from python_kafka_utils.utils import (process_properties,
-                                      update_optional_schema)
+from py2k.creators import PandasModelCreator
+from py2k.utils import (process_properties,
+                        update_optional_schema)
 
 
 class IterableAdapter:
