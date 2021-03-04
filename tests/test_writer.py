@@ -1,26 +1,28 @@
-"""
- Copyright 2021 ABSA Group Limited
+# Copyright 2021 ABSA Group Limited
 
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-     http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- """
-
-from typing import Optional
-import pytest
 import datetime
+from typing import Optional
+from unittest.mock import ANY, MagicMock
 
 import pandas as pd
+import pytest
 
-from python_kafka_utils.models import KafkaModel
+import py2k.producer_config
+import py2k.serializer
+from py2k.models import KafkaModel
+from py2k.writer import KafkaWriter
 
 
 @pytest.fixture
@@ -99,7 +101,7 @@ def test_kafka_model(data_class):
     expected = {
         'type': 'record',
                 'name': 'ModelResult',
-                'namespace': 'absa.kafkautils.modelresult',
+                'namespace': 'python.kafka.modelresult',
                 'fields': [
                     {'type': 'string', 'name': 'Customerkey'},
                     {'type': 'double', 'name': 'Predictedvalue'},
@@ -126,3 +128,48 @@ def test_pandas_serializer(pandas_dataframe, data_class):
     expected = data_class
 
     assert actual == expected
+
+
+def test_writer_pushes_one_item_of_model_data(monkeypatch, data_class):
+    topic = "DUMMY_TOPIC"
+    key = "Customerkey"
+    one_item = data_class[0]
+    one_item_list = [one_item]
+
+    producer_class = MagicMock()
+    producer = MagicMock()
+    producer_class.return_value = producer
+
+    monkeypatch.setattr(py2k.serializer, 'SerializingProducer', producer_class)
+    monkeypatch.setattr(py2k.producer_config,
+                        'SchemaRegistryClient', MagicMock())
+
+    writer = KafkaWriter(topic, {}, {}, key)
+    writer.write(one_item_list)
+
+    expected_key = {key: getattr(one_item, key)}
+
+    producer.produce.assert_called_with(
+        topic=topic, key=expected_key, value=one_item, on_delivery=ANY)
+    producer.poll.assert_called_with(0)
+
+
+def test_writer_pushes_one_item_of_model_data_without_key(monkeypatch, data_class):
+    topic = "DUMMY_TOPIC"
+    one_item = data_class[0]
+    one_item_list = [one_item]
+
+    producer_class = MagicMock()
+    producer = MagicMock()
+    producer_class.return_value = producer
+
+    monkeypatch.setattr(py2k.serializer, 'SerializingProducer', producer_class)
+    monkeypatch.setattr(py2k.producer_config,
+                        'SchemaRegistryClient', MagicMock())
+
+    writer = KafkaWriter(topic, {}, {})
+    writer.write(one_item_list)
+
+    producer.produce.assert_called_with(
+        topic=topic, key=ANY, value=one_item, on_delivery=ANY)
+    producer.poll.assert_called_with(0)
