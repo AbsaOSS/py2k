@@ -1,18 +1,16 @@
-"""
- Copyright 2021 ABSA Group Limited
+# Copyright 2021 ABSA Group Limited
 
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
-     http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- """
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 
 import json
@@ -29,7 +27,8 @@ class ProducerConfig:
     def __init__(self, key, default_config, schema_registry_config, data):
         self._key = key
         self._default_config = default_config
-        self.schema_registry_client = SchemaRegistryClient(schema_registry_config)
+        self.schema_registry_client = SchemaRegistryClient(
+            schema_registry_config)
         self._data = data
         self._value_schema_string = self._get_schema_string(self._data[0])
         self._config_build = None
@@ -39,7 +38,8 @@ class ProducerConfig:
             return self._config_build
 
         config_build = deepcopy(self._default_config)
-        serializer_configs = {**self._value_serializer_config, **self._key_serializer_config}
+        serializer_configs = {
+            **self._value_serializer_config, **self._key_serializer_config}
         config_build.update(serializer_configs)
 
         self._config_build = config_build

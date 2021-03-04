@@ -1,18 +1,16 @@
-"""
- Copyright 2021 ABSA Group Limited
+# Copyright 2021 ABSA Group Limited
 
- Licensed under the Apache License, Version 2.0 (the "License");
- you may not use this file except in compliance with the License.
- You may obtain a copy of the License at
-
-     http://www.apache.org/licenses/LICENSE-2.0
-
- Unless required by applicable law or agreed to in writing, software
- distributed under the License is distributed on an "AS IS" BASIS,
- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- See the License for the specific language governing permissions and
- limitations under the License.
- """
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 import datetime
 from typing import Optional
@@ -143,14 +141,16 @@ def test_writer_pushes_one_item_of_model_data(monkeypatch, data_class):
     producer_class.return_value = producer
 
     monkeypatch.setattr(py2k.serializer, 'SerializingProducer', producer_class)
-    monkeypatch.setattr(py2k.producer_config, 'SchemaRegistryClient', MagicMock())
+    monkeypatch.setattr(py2k.producer_config,
+                        'SchemaRegistryClient', MagicMock())
 
     writer = KafkaWriter(topic, {}, {}, key)
     writer.write(one_item_list)
 
     expected_key = {key: getattr(one_item, key)}
 
-    producer.produce.assert_called_with(topic=topic, key=expected_key, value=one_item, on_delivery=ANY)
+    producer.produce.assert_called_with(
+        topic=topic, key=expected_key, value=one_item, on_delivery=ANY)
     producer.poll.assert_called_with(0)
 
 
@@ -164,10 +164,12 @@ def test_writer_pushes_one_item_of_model_data_without_key(monkeypatch, data_clas
     producer_class.return_value = producer
 
     monkeypatch.setattr(py2k.serializer, 'SerializingProducer', producer_class)
-    monkeypatch.setattr(py2k.producer_config, 'SchemaRegistryClient', MagicMock())
+    monkeypatch.setattr(py2k.producer_config,
+                        'SchemaRegistryClient', MagicMock())
 
     writer = KafkaWriter(topic, {}, {})
     writer.write(one_item_list)
 
-    producer.produce.assert_called_with(topic=topic, key=ANY, value=one_item, on_delivery=ANY)
+    producer.produce.assert_called_with(
+        topic=topic, key=ANY, value=one_item, on_delivery=ANY)
     producer.poll.assert_called_with(0)
