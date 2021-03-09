@@ -6,7 +6,7 @@ A high level Python to Kafka API with Schema Registry compatibility and automati
 
 ## Contributing
 
-For contribution guidelines, please see [CONTRIBUTING.md](.github/CONTRIBUTING.md).
+Please see the [Contribution Guide](.github/CONTRIBUTING.md) for more information.
 
 ## Usage
 
