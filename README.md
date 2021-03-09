@@ -17,8 +17,8 @@ serialized_df = KafkaModel.from_dynamic_pandas(df)
 
 writer = KafkaWriter(
     topic="topic_name",
-    schema_registry_config = schema_registry_config,
-    producer_config = producer_config
+    schema_registry_config=schema_registry_config,
+    producer_config=producer_config
 )
 
 writer.write(serialized_df)
