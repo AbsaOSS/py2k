@@ -4,6 +4,10 @@ A high level Python to Kafka API with Schema Registry compatibility and automati
 
 - Free software: Apache2 license
 
+## Contributing
+
+For contribution guidelines, please see [CONTRIBUTING.md](.github/CONTRIBUTING.md).
+
 ## Usage
 
 ### Minimal Example
