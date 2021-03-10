@@ -121,3 +121,22 @@ Then run
 > git push
 > git push --tags
 ```
+
+## Bumping versions
+
+We are using `bump2version` to bump versions of this package. The format of the versions are aligned to software engineering:
+
+> {major}.{minor}.{patch}-{release}{build}
+
+So this would look like: `1.6.0-rc1` for our first release candidate.
+
+to bump any part of the version you run:
+
+```bash
+> bump2version minor
+# or
+> bump2version build
+# or any of the above key words
+```
+
+For more information please see the [bump2version Github](https://github.com/c4urself/bump2version)

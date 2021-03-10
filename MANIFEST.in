@@ -1,6 +1,6 @@
 include *.md
 recursive-include docs *
-recursive-include py2k *.c *.h *.pyx *.pxd *.pxi *.tp
+recursive-include py2k * 
 include README.md
 include Makefile
 include MANIFEST.in

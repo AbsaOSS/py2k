@@ -62,6 +62,6 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/AbsaOSS/py2k.git',
-    version='1.6.0',
+    version='1.6.0-rc1',
     zip_safe=False,
 )
