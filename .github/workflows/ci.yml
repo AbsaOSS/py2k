@@ -45,26 +45,22 @@ jobs:
     needs: build
     name: Build and publish Python 🐍 distributions 📦 to PyPI and TestPyPI
     runs-on: ubuntu-latest
-    env:
-      PUSH_PACKAGES: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
+    if: github.event_name != 'pull_request' && github.event_name == 'push' && github.ref == 'refs/heads/master'
 
     steps:
       - uses: actions/checkout@master
       - name: Set up Python 3.8
-        if: ${{ env.PUSH_PACKAGES }}
         uses: actions/setup-python@v1
         with:
           python-version: 3.8
 
       - name: Install pypa/build
-        if: ${{ env.PUSH_PACKAGES }}
         run: >-
           python -m
           pip install
           build
           --user
       - name: Build a binary wheel and a source tarball
-        if: ${{ env.PUSH_PACKAGES }}
         run: >-
           python -m
           build
@@ -74,7 +70,6 @@ jobs:
           .
 
       - name: Publish distribution 📦 to Test PyPI
-        if: ${{ env.PUSH_PACKAGES }}
         uses: pypa/gh-action-pypi-publish@master
         with:
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
