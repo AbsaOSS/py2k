@@ -53,6 +53,7 @@ setup(
     install_requires=requirements,
     license="Apache Software license",
     long_description=readme + '\n\n' + history,
+    long_description_content_type='text/markdown',
     include_package_data=True,
     keywords='py2k',
     name='py2k',
