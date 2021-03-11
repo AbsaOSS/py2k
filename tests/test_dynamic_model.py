@@ -56,22 +56,16 @@ def test_return_empty_if_df_empty(test_df):
     assert record[0].message.args[0] == "Unable to create kafka model from an empty dataframe."
 
 
-def test_dynamically_convert_from_pandas_to_kafka_model(test_data, test_df):
+def test_dynamically_convert_from_pandas(test_data, test_df):
     model = DynamicKafkaModel(test_df, 'TestModel')
     records = model.from_pandas(test_df)
+    _assert_records(records, test_data)
 
-    # makes sure all records were converted
-    assert len(records) == len(test_data)
 
-    reconstructions = []
-    for record in records:
-        # makes sure the extracted models are instances of KafkaModel
-        assert issubclass(record.__class__, KafkaModel)
-
-        reconstructions.append(_TestData(**record.dict()))
-
-    # makes sure the data is the same
-    assert set(test_data) == set(reconstructions)
+def test_convert_from_constructed_dataframe_by_default(test_data, test_df):
+    model = DynamicKafkaModel(test_df, 'TestModel')
+    records = model.from_pandas()
+    _assert_records(records, test_data)
 
 
 def test_fields_names_and_titles_are_the_same(test_df):
@@ -180,6 +174,21 @@ def test_supported_optional_types(value, _type):
     expected = {'column_1': _type}
 
     _assert_schema_types(records[0], expected)
+
+
+def _assert_records(records, test_data):
+    # makes sure all records were converted
+    assert len(records) == len(test_data)
+
+    reconstructions = []
+    for record in records:
+        # makes sure the extracted models are instances of KafkaModel
+        assert issubclass(record.__class__, KafkaModel)
+
+        reconstructions.append(_TestData(**record.dict()))
+
+    # makes sure the data is the same
+    assert set(test_data) == set(reconstructions)
 
 
 def _assert_schema_defaults(sample_record, expected, by_name=True):

@@ -89,10 +89,15 @@ class DynamicKafkaModel:
                  types_defaults: Dict[object, object] = None,
                  optional_fields: List[str] = None):
 
+        self._df = df
+
         model_creator = PandasModelCreator(
             df, model_name, fields_defaults, types_defaults, optional_fields, KafkaModel)
 
         self._model = model_creator.create()
 
-    def from_pandas(self, df: pd.DataFrame) -> List['KafkaModel']:
-        return self._model.from_pandas(df)
+    def from_pandas(self, df: pd.DataFrame = None) -> List['KafkaModel']:
+        if df is not None:
+            return self._model.from_pandas(df)
+
+        return self._model.from_pandas(self._df)

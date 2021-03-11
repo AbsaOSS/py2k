@@ -131,9 +131,3 @@ class PandasModelCreator(ModelCreator):
         template = {field_name: field_definition(
             field_name, field_value) for field_name, field_value in record.items()}
         return create_model(self._model_name, **template, __base__=self._base)
-
-    def _to_model(self, model, records):
-        class Wrapper(self._base):
-            __root__: List[model]
-
-        return Wrapper.parse_obj(records).__root__
