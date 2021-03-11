@@ -39,7 +39,8 @@ class KafkaSerializer:
                 break
             except BufferError as e:
                 print(
-                    f'Failed to send on attempt {key}. Error received {str(e)}')
+                    f'Failed to send on attempt {key}. '
+                    f'Error received {str(e)}')
                 self._producer.poll(1)
 
     def flush(self):

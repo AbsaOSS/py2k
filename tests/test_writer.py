@@ -130,7 +130,7 @@ def test_pandas_serializer(pandas_dataframe, data_class):
     assert actual == expected
 
 
-def test_writer_pushes_one_item_of_model_data(monkeypatch, data_class):
+def test_pushes_one_item_of_model_data(monkeypatch, data_class):
     topic = "DUMMY_TOPIC"
     key = "Customerkey"
     one_item = data_class[0]
@@ -154,7 +154,7 @@ def test_writer_pushes_one_item_of_model_data(monkeypatch, data_class):
     producer.poll.assert_called_with(0)
 
 
-def test_writer_pushes_one_item_of_model_data_without_key(monkeypatch, data_class):
+def test_pushes_one_item_of_model_data_without_key(monkeypatch, data_class):
     topic = "DUMMY_TOPIC"
     one_item = data_class[0]
     one_item_list = [one_item]

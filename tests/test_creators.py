@@ -50,5 +50,3 @@ def test_throw_exception_when_creating_model_from_empty_df():
     with pytest.raises(ValueError):
         empty_df = pd.DataFrame(data=[], columns=['c1', 'c2', 'c3'])
         PandasModelCreator(empty_df, 'TestModel', base=KafkaModel).create()
-
-

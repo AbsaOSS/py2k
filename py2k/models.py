@@ -74,7 +74,10 @@ class KafkaModel(BaseModel):
                                    f'{schema["name"].lower()}')
             schema = process_properties(schema)
             schema.pop('properties')
-            if 'required' in schema:  # schemas dynamically generated might not have this field, which is removed anyway
+
+            # Dynamically generated schemas might not have this field,
+            # which is removed anyway.
+            if 'required' in schema:
                 schema.pop('required')
             update_optional_schema(schema=schema, model=model)
 
@@ -91,8 +94,9 @@ class DynamicKafkaModel:
 
         self._df = df
 
-        model_creator = PandasModelCreator(
-            df, model_name, fields_defaults, types_defaults, optional_fields, KafkaModel)
+        model_creator = PandasModelCreator(df, model_name, fields_defaults,
+                                           types_defaults, optional_fields,
+                                           KafkaModel)
 
         self._model = model_creator.create()
 

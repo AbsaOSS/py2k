@@ -44,7 +44,10 @@ class KafkaWriter(object):
 
     def _create_serializer(self, data: List[KafkaModel]):
         producer_config = ProducerConfig(
-            self._key, self._default_producer_config, self._schema_registry_config, data)
+            self._key,
+            self._default_producer_config,
+            self._schema_registry_config, data)
+
         self._serializer = KafkaSerializer(
             self._topic, self._key, producer_config)
 

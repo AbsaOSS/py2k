@@ -34,7 +34,7 @@ def test_dynamic_model_creates_pandas_model_creator(model_creator_class):
     model_creator_class.assert_called_with(*params_to_call)
 
 
-def test_dynamic_model_creates_pandas_model_creator_from_dataframe(model_creator_class):
+def test_dynamic_model_creates_creator_from_dataframe(model_creator_class):
     df = pd.DataFrame({'a': [1, 2], 'b': ["bla", "alb"]})
 
     params = df, ANY, ANY, ANY, ANY

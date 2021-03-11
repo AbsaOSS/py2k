@@ -1,3 +1,17 @@
+# Copyright 2021 ABSA Group Limited
+
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 import json
 from copy import deepcopy
 from datetime import date
@@ -20,8 +34,11 @@ class _TestData(BaseModel):
     bool_val: bool
 
     def __str__(self):
-        return f"Name = ${self.name}, Id = ${self.id}, Value = ${self.value}, " \
-               f"Decimal Val = ${self.decimal_val}, bool_val = ${self.bool_val}"
+        return f"Name = ${self.name}, " \
+               f"Id = ${self.id}, " \
+               f"Value = ${self.value}, " \
+               f"Decimal Val = ${self.decimal_val}," \
+               f" bool_val = ${self.bool_val}"
 
     def __hash__(self):
         return hash(self.__str__())
@@ -52,8 +69,9 @@ def test_return_empty_if_df_empty(test_df):
         created_df = model.from_pandas(empty_df)
         assert len(created_df) == 0
 
+    expected_message = "Unable to create kafka model from an empty dataframe."
     assert len(record) == 1
-    assert record[0].message.args[0] == "Unable to create kafka model from an empty dataframe."
+    assert record[0].message.args[0] == expected_message
 
 
 def test_dynamically_convert_from_pandas(test_data, test_df):
@@ -81,8 +99,9 @@ def test_use_default_defaults_if_none_informed(test_df):
     records = model.from_pandas(test_df)
 
     # expected defaults by field
-    expected = {field: PandasModelCreator._SCHEMA_TYPES_DEFAULTS.get(type(value))
-                for field, value in records[0].dict().items()}
+    expected = {
+        field: PandasModelCreator._SCHEMA_TYPES_DEFAULTS.get(type(value))
+        for field, value in records[0].dict().items()}
 
     _assert_schema_defaults(records[0], expected)
 
@@ -101,7 +120,8 @@ def test_some_defaults_from_field_name(test_df):
     local_defaults = {"name": "default name", "value": 8.8,
                       "decimal_val": Decimal(12), "bool_val": True}
 
-    model = DynamicKafkaModel(test_df, 'TestModel', fields_defaults=local_defaults)
+    model = DynamicKafkaModel(test_df, 'TestModel',
+                              fields_defaults=local_defaults)
     records = model.from_pandas(test_df)
 
     expected = {**local_defaults,
@@ -122,7 +142,8 @@ def test_all_defaults_from_field_type(test_df):
 def test_some_defaults_from_field_type(test_df):
     local_defaults = {int: 8, float: 8.8, bool: True}
 
-    model = DynamicKafkaModel(test_df, 'TestModel', types_defaults=local_defaults)
+    model = DynamicKafkaModel(test_df, 'TestModel',
+                              types_defaults=local_defaults)
     records = model.from_pandas(test_df)
 
     expected = {**local_defaults,
@@ -132,7 +153,8 @@ def test_some_defaults_from_field_type(test_df):
 
 
 def test_optional_fields_specified_by_param(test_df_with_nones):
-    model = DynamicKafkaModel(test_df_with_nones, 'TestModel', optional_fields=['name'])
+    model = DynamicKafkaModel(test_df_with_nones, 'TestModel',
+                              optional_fields=['name'])
     records = model.from_pandas(test_df_with_nones)
 
     expected = {"name": Optional[str], "id": int}
