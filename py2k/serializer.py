@@ -16,6 +16,7 @@
 from uuid import uuid4
 
 from confluent_kafka import SerializingProducer
+from confluent_kafka import KafkaError, Message
 
 
 class KafkaSerializer:
@@ -54,9 +55,8 @@ class KafkaSerializer:
             return str(uuid4())
 
     @staticmethod
-    def _delivery_report(err, msg):
-        """
-        Reports the failure or success of a message delivery.
+    def _delivery_report(err: KafkaError, msg: Message):
+        """ Reports the failure or success of a message delivery.
 
         Note:
             In the delivery report callback the Message.key()
@@ -68,12 +68,12 @@ class KafkaSerializer:
             report callback we recommend a bound callback
             or lambda where you pass the objects along.
 
-        :param err: The error that occurred on None on success.
-        :type err: KafkaError
-        :param msg: The message that was produced or failed.
-        :type msg: Message
+        Args:
+            err ([KafkaError]): The error that occurred on None on success.
+            msg ([Message]): The message that was produced or failed.
         """
+
         if err is not None:
             print(
-                "Delivery failed for record {}: {}".format(msg.key(), err)
+                f"Delivery failed for record {msg.key()}: {err}"
             )

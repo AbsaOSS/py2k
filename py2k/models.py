@@ -87,11 +87,27 @@ class KafkaModel(BaseModel):
 
 
 class DynamicKafkaModel:
+    """ class model for automatic serialization of Pandas DataFrame to
+    KafkaModel
+    """
+
     def __init__(self, df: pd.DataFrame, model_name: str,
                  fields_defaults: Dict[str, object] = None,
                  types_defaults: Dict[object, object] = None,
                  optional_fields: List[str] = None):
-
+        """
+        Args:
+            df (pd.DataFrame): Pandas dataframe to serialize
+            model_name (str): destination Pydantic model
+            fields_defaults (Dict[str, object], optional): default values for
+                 fields in the dataframe. The keys are the fields names.
+                 Defaults to None.
+            types_defaults (Dict[object, object], optional): default values
+                 for the types in the dataframe. The keys are the types,
+                 e.g. int. Defaults to None.
+            optional_fields (List[str], optional): list of fields which should
+                 be marked as optional. Defaults to None.
+        """
         self._df = df
 
         model_creator = PandasModelCreator(df, model_name, fields_defaults,
@@ -101,6 +117,14 @@ class DynamicKafkaModel:
         self._model = model_creator.create()
 
     def from_pandas(self, df: pd.DataFrame = None) -> List['KafkaModel']:
+        """create list of KafkaModel objects from a pandas DataFrame
+
+        Args:
+            df (pd.DataFrame): Pandas dataframe. Defaults to None.
+
+        Returns:
+            [List[KafkaModel]]: serialized list of KafkaModel objects
+        """
         if df is not None:
             return self._model.from_pandas(df)
 

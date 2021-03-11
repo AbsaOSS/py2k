@@ -15,7 +15,7 @@
 from abc import ABC
 from datetime import date
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 from pydantic import Field, create_model, BaseModel
@@ -27,8 +27,7 @@ class ModelCreator(ABC):
 
 
 class PandasModelCreator(ModelCreator):
-    """
-    Dynamically converts a Pandas dataframe to a Pydantic model.
+    """Dynamically converts a Pandas dataframe to a Pydantic model.
 
     The fields and types defaults can be used together, i.e. it is possible
         to specify some defaults by field name and some defaults by type.
@@ -39,27 +38,17 @@ class PandasModelCreator(ModelCreator):
         nor for its type, a default per type will be used.
 
     The defaults per type are:
-        str = ""
-        int = -1
-        float = -1.0
-        Decimal not directly supported, will be converted to float,
+        - str = ""
+        - int = -1
+        - float = -1.0
+        - Decimal not directly supported, will be converted to float,
             so the default same as float (always)
-        bool = False
-        date = date.min
-        pd.Timestamp = pd.Timestamp.min
+        - bool = False
+        - date = date.min
+        - pd.Timestamp = pd.Timestamp.min
             Use when you need to set default datetime
 
     They can be found in KafkaModel._SCHEMA_TYPES_DEFAULTS
-
-    :param df: Pandas dataframe
-    :param model_name: destination Pydantic model
-    :param fields_defaults: default values for fields in the dataframe.
-        The keys are the fields names
-    :param types_defaults: default values for the types in the dataframe.
-        The keys are the types, e.g. int
-    :param optional_fields: list of fields which should be marked as optional
-    :return: Records from the Pandas dataframe
-        parsed as instances of KafkaModel
     """
 
     _SCHEMA_TYPES_DEFAULTS = {
@@ -79,6 +68,21 @@ class PandasModelCreator(ModelCreator):
                  types_defaults: Dict[object, object] = None,
                  optional_fields: List[str] = None,
                  base: type = BaseModel):
+        """
+        Args:
+            df (pd.DataFrame): Pandas dataframe
+            model_name (str): destination Pydantic model
+            fields_defaults (Dict[str, object], optional): default values for
+                 fields in the dataframe. The keys are the fields names.
+                 Defaults to None.
+            types_defaults (Dict[object, object], optional): default values
+                 for the types in the dataframe. The keys are the types,
+                 e.g. int. Defaults to None.
+            optional_fields (List[str], optional): list of fields which should
+                 be marked as optional. Defaults to None.
+            base (type, optional): Pydantic model to create.
+                 Defaults to BaseModel.
+        """
         self._df = df
         self._model_name = model_name
         self._fields_defaults = fields_defaults
@@ -97,13 +101,19 @@ class PandasModelCreator(ModelCreator):
                 "Unable to create kafka model from an empty dataframe.")
 
     def _create_model(self, record):
-        def field_definition(field_name, field_value):
-            """
-            Creates a field definition containing its
+        def field_definition(field_name: str, field_value: Any):
+            """Creates a field definition containing its
                 type, title and default value.
-            :return: tuple like (field type, Field(title, default value)
-            """
+            Args:
+                field_name ([str]): field name
+                field_value ([Any]): field value
 
+            Raises:
+                ValueError: if schema types aren't supported
+
+            Returns:
+                [Tuple like]: field type, Field(title, default value)
+            """
             value_type = type(field_value)
 
             if self._fields_defaults and field_name in self._fields_defaults:

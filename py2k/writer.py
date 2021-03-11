@@ -29,13 +29,15 @@ class KafkaWriter(object):
                  key: str = None):
         """A class for easy writing of data to kafka
 
-        :param schema_registry_config: a dictionary compatible with the
-         `confluent_kafka.schema_registry.SchemaRegistryClient`
-        :type schema_registry_config: dict
-        :param producer_config: a dictionary compatible with the
-         `confluent_kafka.SerializingProducer`
-        :type producer_config: dict
+        Args:
+            topic (str): topic to post to
+            schema_registry_config (Dict[str, Any]): a dictionary compatible
+                with the `confluent_kafka.schema_registry.SchemaRegistryClient`
+            producer_config (Dict[str, Any]): a dictionary compatible with the
+                `confluent_kafka.SerializingProducer`
+            key (str, optional): [description]. Defaults to None.
         """
+
         self._topic = topic
         self._default_producer_config = producer_config
         self._key = key
@@ -52,6 +54,11 @@ class KafkaWriter(object):
             self._topic, self._key, producer_config)
 
     def write(self, data: List[KafkaModel]):
+        """writes data to Kafka
+
+        Args:
+            data (List[KafkaModel]): Serialized `KafkaModel` objects
+        """
         self._create_serializer(data)
         for item in tqdm(data):
             self._serializer.produce(item)
