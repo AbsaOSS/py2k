@@ -13,11 +13,11 @@ Please see the [Contribution Guide](.github/CONTRIBUTING.md) for more informatio
 ### Minimal Example
 
 ```python
-from py2k.models import KafkaModel
+from py2k.models import DynamicKafkaModel
 from py2k.writer import KafkaWriter
 
 # assuming we have a pandas DataFrame, df
-serialized_df = KafkaModel.from_dynamic_pandas(df)
+serialized_df = DynamicKafkaModel(df=df,model_name='test_model').from_pandas()
 
 writer = KafkaWriter(
     topic="topic_name",

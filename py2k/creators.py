@@ -12,11 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import warnings
 from abc import ABC
 from datetime import date
 from decimal import Decimal
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import pandas as pd
 from pydantic import Field, create_model, BaseModel
@@ -28,34 +27,28 @@ class ModelCreator(ABC):
 
 
 class PandasModelCreator(ModelCreator):
-    """
-    Dynamically converts a Pandas dataframe to a Pydantic model.
+    """Dynamically converts a Pandas dataframe to a Pydantic model.
 
-    The fields and types defaults can be used together, i.e. it is possible to specify some defaults by field
-        name and some defaults by type.
+    The fields and types defaults can be used together, i.e. it is possible
+        to specify some defaults by field name and some defaults by type.
 
     Currently, only strings, integers and floats are accepted.
 
-    If, for a given field, default values are not found either for its name nor for its type, a default per type
-        will be used.
+    If, for a given field, default values are not found either for its name
+        nor for its type, a default per type will be used.
 
     The defaults per type are:
-        str = ""
-        int = -1
-        float = -1.0
-        Decimal not directly supported, will be converted to float, so the default same as float (always)
-        bool = False
-        date = date.min
-        pd.Timestamp = pd.Timestamp.min - Use when you need to set default datetime
+        - str = ""
+        - int = -1
+        - float = -1.0
+        - Decimal not directly supported, will be converted to float,
+            so the default same as float (always)
+        - bool = False
+        - date = date.min
+        - pd.Timestamp = pd.Timestamp.min
+            Use when you need to set default datetime
 
     They can be found in KafkaModel._SCHEMA_TYPES_DEFAULTS
-
-    :param df: Pandas dataframe
-    :param model_name: destination Pydantic model
-    :param fields_defaults: default values for fields in the dataframe. The keys are the fields names
-    :param types_defaults: default values for the types in the dataframe. The keys are the types, e.g. int
-    :param optional_fields: list of fields which should be marked as optional
-    :return: Records from the Pandas dataframe parsed as instances of KafkaModel
     """
 
     _SCHEMA_TYPES_DEFAULTS = {
@@ -75,6 +68,21 @@ class PandasModelCreator(ModelCreator):
                  types_defaults: Dict[object, object] = None,
                  optional_fields: List[str] = None,
                  base: type = BaseModel):
+        """
+        Args:
+            df (pd.DataFrame): Pandas dataframe
+            model_name (str): destination Pydantic model
+            fields_defaults (Dict[str, object], optional): default values for
+                 fields in the dataframe. The keys are the fields names.
+                 Defaults to None.
+            types_defaults (Dict[object, object], optional): default values
+                 for the types in the dataframe. The keys are the types,
+                 e.g. int. Defaults to None.
+            optional_fields (List[str], optional): list of fields which should
+                 be marked as optional. Defaults to None.
+            base (type, optional): Pydantic model to create.
+                 Defaults to BaseModel.
+        """
         self._df = df
         self._model_name = model_name
         self._fields_defaults = fields_defaults
@@ -87,19 +95,25 @@ class PandasModelCreator(ModelCreator):
         if records_as_dict_list:
             sample_record = records_as_dict_list[0]
             model = self._create_model(sample_record)
-            return self._to_model(model, records_as_dict_list)
+            return model
         else:
-            warnings.warn(
+            raise ValueError(
                 "Unable to create kafka model from an empty dataframe.")
-            return []
 
     def _create_model(self, record):
-        def field_definition(field_name, field_value):
-            """
-            Creates a field definition containing its type, title and default value.
-            :return: tuple like (field type, Field(title, default value)
-            """
+        def field_definition(field_name: str, field_value: Any):
+            """Creates a field definition containing its
+                type, title and default value.
+            Args:
+                field_name ([str]): field name
+                field_value ([Any]): field value
 
+            Raises:
+                ValueError: if schema types aren't supported
+
+            Returns:
+                [Tuple like]: field type, Field(title, default value)
+            """
             value_type = type(field_value)
 
             if self._fields_defaults and field_name in self._fields_defaults:
@@ -109,18 +123,25 @@ class PandasModelCreator(ModelCreator):
                 # if there is preferred value_default for the type, use it
                 if self._types_defaults and value_type in self._types_defaults:
                     value_default = self._types_defaults.get(value_type)
-                    # otherwise, use the value_default value_default for the type
+                    # otherwise, use the value_default for the type
                 elif value_type in self._SCHEMA_TYPES_DEFAULTS:
                     value_default = self._SCHEMA_TYPES_DEFAULTS.get(value_type)
                 else:
-                    raise ValueError(f"Invalid type for field '{field_name}': '{value_type}'. "
-                                     f"Supported types: '{self._SCHEMA_TYPES_DEFAULTS.keys()}'")
 
-            # keep the title the same as the field name since the title is the value used when generating the Json
-            # schema from the record, which is also used to generate the Avro schema.
+                    message = f"""
+                        Invalid type for field '{field_name}': '{value_type}'.
+                        Supported types: '{self._SCHEMA_TYPES_DEFAULTS.keys()}'
+                    """
+                    raise ValueError(message)
+
+            # keep the title the same as the field name since the title is
+            # the value used when generating the Json schema from the record,
+            # which is also used to generate the Avro schema.
             #
-            # If this is not done, the title will be different from the field name when the Avro serializer is producing
-            # the records, because the title uses 'snake case', therefore, there will be no matching between the fields
+            # If this is not done, the title will be different
+            # from the field name when the Avro serializer is producing
+            # the records, because the title uses 'snake case', therefore,
+            # there will be no matching between the fields
             # which will take the serializer to assume the default values only
             if self._optional_fields and field_name in self._optional_fields:
                 value_type = Optional[value_type]
@@ -130,12 +151,6 @@ class PandasModelCreator(ModelCreator):
         if self._types_defaults and self._types_defaults.get(float):
             self._types_defaults[Decimal] = self._types_defaults.get(float)
 
-        template = {field_name: field_definition(
-            field_name, field_value) for field_name, field_value in record.items()}
+        template = {name: field_definition(
+            name, value) for name, value in record.items()}
         return create_model(self._model_name, **template, __base__=self._base)
-
-    def _to_model(self, model, records):
-        class Wrapper(self._base):
-            __root__: List[model]
-
-        return Wrapper.parse_obj(records).__root__

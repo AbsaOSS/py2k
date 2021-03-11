@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 from unittest.mock import MagicMock, ANY
 
 import pandas as pd
@@ -19,37 +18,31 @@ from pandas._testing import assert_frame_equal
 import pytest
 
 import py2k.models
-from py2k.models import KafkaModel
+from py2k.models import KafkaModel, DynamicKafkaModel
 
 
-def test_pandas_dynamic_creates_pandas_model_creator(model_creator_class):
+def test_dynamic_model_creates_pandas_model_creator(model_creator_class):
     model_name = 'TestModel'
     fields_defaults = {'field1': 10, 'field2': "aaa"}
     types_defaults = {int: 12}
     optional_fields = ['field4']
 
     params = ANY, model_name, fields_defaults, types_defaults, optional_fields
-    KafkaModel.from_dynamic_pandas(*params)
+    DynamicKafkaModel(*params)
 
     params_to_call = *params, KafkaModel
     model_creator_class.assert_called_with(*params_to_call)
 
 
-def test_pandas_dynamic_creates_pandas_model_creator_from_dataframe(model_creator_class):
+def test_dynamic_model_creates_creator_from_dataframe(model_creator_class):
     df = pd.DataFrame({'a': [1, 2], 'b': ["bla", "alb"]})
 
     params = df, ANY, ANY, ANY, ANY
-    KafkaModel.from_dynamic_pandas(*params)
+    DynamicKafkaModel(*params)
 
     params_to_call = *params, KafkaModel
     called_df, *_ = called_args(model_creator_class, len(params_to_call))
     assert_frame_equal(df, called_df)
-
-
-def test_pandas_dynamic_creates_pydantic_model(model_creator):
-    returned_value = KafkaModel.from_dynamic_pandas(ANY, ANY)
-
-    assert returned_value == model_creator.create.return_value
 
 
 @pytest.fixture

@@ -14,6 +14,7 @@
 
 import datetime
 import itertools
+import warnings
 from typing import Any, Dict, List, Type
 
 import pandas as pd
@@ -36,10 +37,14 @@ class KafkaModel(BaseModel):
 
     @classmethod
     def from_pandas(cls, df: pd.DataFrame) -> List['KafkaModel']:
-        model_list = []
-        for item in df.to_dict('records'):
-            model_list.append(cls(**item))
-        return model_list
+        records = df.to_dict('records')
+
+        if records:
+            return [cls(**item) for item in records]
+
+        warnings.warn(
+            "Unable to create kafka model from an empty dataframe.")
+        return []
 
     @classmethod
     def iter_from_pandas(cls, df: pd.DataFrame):
@@ -47,16 +52,6 @@ class KafkaModel(BaseModel):
             for item in df.to_dict('records'):
                 yield cls(**item)
         return IterableAdapter(lambda: iter_pandas(cls, df))
-
-    @classmethod
-    def from_dynamic_pandas(cls, df: pd.DataFrame, model_name: str,
-                            fields_defaults: Dict[str, object] = None,
-                            types_defaults: Dict[object, object] = None,
-                            optional_fields: List[str] = None) -> List['KafkaModel']:
-
-        model_creator = PandasModelCreator(
-            df, model_name, fields_defaults, types_defaults, optional_fields, KafkaModel)
-        return model_creator.create()
 
     class Config:
         json_encoders = {
@@ -79,10 +74,58 @@ class KafkaModel(BaseModel):
                                    f'{schema["name"].lower()}')
             schema = process_properties(schema)
             schema.pop('properties')
-            if 'required' in schema:  # schemas dynamically generated might not have this field, which is removed anyway
+
+            # Dynamically generated schemas might not have this field,
+            # which is removed anyway.
+            if 'required' in schema:
                 schema.pop('required')
             update_optional_schema(schema=schema, model=model)
 
     @staticmethod
     def schema_from_iter(iterator: IterableAdapter):
         return list(itertools.islice(iterator, 1))[0].schema_json()
+
+
+class DynamicKafkaModel:
+    """ class model for automatic serialization of Pandas DataFrame to
+    KafkaModel
+    """
+
+    def __init__(self, df: pd.DataFrame, model_name: str,
+                 fields_defaults: Dict[str, object] = None,
+                 types_defaults: Dict[object, object] = None,
+                 optional_fields: List[str] = None):
+        """
+        Args:
+            df (pd.DataFrame): Pandas dataframe to serialize
+            model_name (str): destination Pydantic model
+            fields_defaults (Dict[str, object], optional): default values for
+                 fields in the dataframe. The keys are the fields names.
+                 Defaults to None.
+            types_defaults (Dict[object, object], optional): default values
+                 for the types in the dataframe. The keys are the types,
+                 e.g. int. Defaults to None.
+            optional_fields (List[str], optional): list of fields which should
+                 be marked as optional. Defaults to None.
+        """
+        self._df = df
+
+        model_creator = PandasModelCreator(df, model_name, fields_defaults,
+                                           types_defaults, optional_fields,
+                                           KafkaModel)
+
+        self._model = model_creator.create()
+
+    def from_pandas(self, df: pd.DataFrame = None) -> List['KafkaModel']:
+        """create list of KafkaModel objects from a pandas DataFrame
+
+        Args:
+            df (pd.DataFrame): Pandas dataframe. Defaults to None.
+
+        Returns:
+            [List[KafkaModel]]: serialized list of KafkaModel objects
+        """
+        if df is not None:
+            return self._model.from_pandas(df)
+
+        return self._model.from_pandas(self._df)
