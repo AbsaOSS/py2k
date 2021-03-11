@@ -14,3 +14,5 @@
 - [ ] Unit tests for the changes exist
 - [ ] Tests pass on CI and coverage remains at 100%
 - [ ] Documentation reflects the changes where applicable
+- [ ] Version bumped if necessary
+- [ ] Changes are documented in [HISTORY.md](../HISTORY.md)
