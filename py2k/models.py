@@ -40,15 +40,11 @@ class KafkaModel(BaseModel):
         records = df.to_dict('records')
 
         if records:
-            model_list = []
-            for item in records:
-                model_list.append(cls(**item))
-            return model_list
-        else:
-            warnings.warn(
-                "Unable to create kafka model from an empty dataframe.")
-            return []
+            return [cls(**item) for item in records]
 
+        warnings.warn(
+            "Unable to create kafka model from an empty dataframe.")
+        return []
 
     @classmethod
     def iter_from_pandas(cls, df: pd.DataFrame):
