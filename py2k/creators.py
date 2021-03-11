@@ -87,7 +87,7 @@ class PandasModelCreator(ModelCreator):
         if records_as_dict_list:
             sample_record = records_as_dict_list[0]
             model = self._create_model(sample_record)
-            return self._to_model(model, records_as_dict_list)
+            return model
         else:
             warnings.warn(
                 "Unable to create kafka model from an empty dataframe.")

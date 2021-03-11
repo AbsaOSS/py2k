@@ -21,6 +21,7 @@ from typing import Optional
 import pandas as pd
 import pytest
 from pydantic import BaseModel
+from pydantic.fields import ModelField
 
 from py2k.creators import PandasModelCreator
 from py2k.models import KafkaModel
@@ -250,6 +251,30 @@ def _assert_schema_types(sample_record, expected):
         expected_json = python_to_json(expected_type)
         expected_json_as_set = set(expected_json.items())
         assert expected_json_as_set.issubset(field_as_set)
+
+
+@pytest.mark.parametrize(
+    'expected_type, value',
+    [
+        (str, 'str_value'),
+        (int, 10),
+        (float, -1.0),
+        (bool, True),
+        (Decimal, Decimal(43.2)),
+        (date, date(1991, 3, 23)),
+        (pd.Timestamp, pd.Timestamp(1991, 3, 23, 12)),
+    ]
+)
+def test_creates_model_with_field_of_type(expected_type, value):
+    df = pd.DataFrame({'field_name': [value]})
+
+    model = PandasModelCreator(df, 'TestModel', base=KafkaModel).create()
+    fields = model.__fields__
+    field = list(fields.values())[0]
+
+    assert len(fields) == 1
+    assert field.name == 'field_name'
+    assert field.type_ == expected_type
 
 
 @pytest.fixture

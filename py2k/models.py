@@ -86,3 +86,14 @@ class KafkaModel(BaseModel):
     @staticmethod
     def schema_from_iter(iterator: IterableAdapter):
         return list(itertools.islice(iterator, 1))[0].schema_json()
+
+
+class DynamicKafkaModel(KafkaModel):
+    def __init__(self, df: pd.DataFrame, model_name: str,
+                 fields_defaults: Dict[str, object] = None,
+                 types_defaults: Dict[object, object] = None,
+                 optional_fields: List[str] = None):
+
+        model_creator = PandasModelCreator(
+            df, model_name, fields_defaults, types_defaults, optional_fields, KafkaModel)
+        self._model = model_creator.create()
