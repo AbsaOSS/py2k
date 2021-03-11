@@ -53,16 +53,6 @@ class KafkaModel(BaseModel):
                 yield cls(**item)
         return IterableAdapter(lambda: iter_pandas(cls, df))
 
-    @classmethod
-    def from_dynamic_pandas(cls, df: pd.DataFrame, model_name: str,
-                            fields_defaults: Dict[str, object] = None,
-                            types_defaults: Dict[object, object] = None,
-                            optional_fields: List[str] = None) -> List['KafkaModel']:
-
-        model_creator = PandasModelCreator(
-            df, model_name, fields_defaults, types_defaults, optional_fields, KafkaModel)
-        return model_creator.create()
-
     class Config:
         json_encoders = {
             datetime.date: lambda v: str(v),
