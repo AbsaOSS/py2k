@@ -58,17 +58,6 @@ def test_pandas_dynamic_creates_pandas_model_creator_from_dataframe(model_creato
     assert_frame_equal(df, called_df)
 
 
-# def test_dynamic_model_serializes_pandas_df(model_creator_class):
-    # df = pd.DataFrame({'a': [1, 2], 'b': ["bla", "alb"]})
-    #
-    # params = df, ANY, ANY, ANY, ANY
-    # result = DynamicKafkaModel(*params).from_pandas(df)
-    #
-    # params_to_call = *params, KafkaModel
-    # called_df, *_ = called_args(model_creator_class, len(params_to_call))
-    # assert_frame_equal(df, called_df)
-
-
 def test_pandas_dynamic_creates_pydantic_model(model_creator):
     returned_value = KafkaModel.from_dynamic_pandas(ANY, ANY)
 

@@ -14,6 +14,7 @@
 
 import datetime
 import itertools
+import warnings
 from typing import Any, Dict, List, Type
 
 import pandas as pd
@@ -36,10 +37,18 @@ class KafkaModel(BaseModel):
 
     @classmethod
     def from_pandas(cls, df: pd.DataFrame) -> List['KafkaModel']:
-        model_list = []
-        for item in df.to_dict('records'):
-            model_list.append(cls(**item))
-        return model_list
+        records = df.to_dict('records')
+
+        if records:
+            model_list = []
+            for item in records:
+                model_list.append(cls(**item))
+            return model_list
+        else:
+            warnings.warn(
+                "Unable to create kafka model from an empty dataframe.")
+            return []
+
 
     @classmethod
     def iter_from_pandas(cls, df: pd.DataFrame):
@@ -88,7 +97,7 @@ class KafkaModel(BaseModel):
         return list(itertools.islice(iterator, 1))[0].schema_json()
 
 
-class DynamicKafkaModel(KafkaModel):
+class DynamicKafkaModel:
     def __init__(self, df: pd.DataFrame, model_name: str,
                  fields_defaults: Dict[str, object] = None,
                  types_defaults: Dict[object, object] = None,
@@ -96,4 +105,8 @@ class DynamicKafkaModel(KafkaModel):
 
         model_creator = PandasModelCreator(
             df, model_name, fields_defaults, types_defaults, optional_fields, KafkaModel)
+
         self._model = model_creator.create()
+
+    def from_pandas(self, df: pd.DataFrame) -> List['KafkaModel']:
+        return self._model.from_pandas(df)

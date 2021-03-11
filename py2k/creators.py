@@ -89,9 +89,7 @@ class PandasModelCreator(ModelCreator):
             model = self._create_model(sample_record)
             return model
         else:
-            warnings.warn(
-                "Unable to create kafka model from an empty dataframe.")
-            return []
+            raise ValueError("Unable to create kafka model from an empty dataframe.")
 
     def _create_model(self, record):
         def field_definition(field_name, field_value):
