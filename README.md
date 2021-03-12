@@ -4,6 +4,14 @@ A high level Python to Kafka API with Schema Registry compatibility and automati
 
 - Free software: Apache2 license
 
+## Installation
+
+Py2K is currently available on PIP:
+
+```bash
+ > pip install py2k
+```
+
 ## Contributing
 
 Please see the [Contribution Guide](.github/CONTRIBUTING.md) for more information.
@@ -27,8 +35,6 @@ writer = KafkaWriter(
 
 writer.write(serialized_df)
 ```
-
-Please see the examples/ folder for additional examples
 
 ## Features
 
