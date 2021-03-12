@@ -28,8 +28,6 @@ writer = KafkaWriter(
 writer.write(serialized_df)
 ```
 
-Please see the examples/ folder for additional examples
-
 ## Features
 
 - Schema Registry Integration
