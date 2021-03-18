@@ -32,8 +32,7 @@ class KafkaSerializer:
     def value_serializer(self):
         return AvroSerializer(
             self._item.schema_json(),
-            self._schema_registry_client,
-            to_dict=self._to_dict_func()
+            self._schema_registry_client
         )
 
     def key_serializer(self):
@@ -42,9 +41,13 @@ class KafkaSerializer:
 
         return AvroSerializer(
             schema_str=self._key_schema_string,
-            schema_registry_client=self._schema_registry_client,
-            to_dict=self._to_dict_func({self._key})
+            schema_registry_client=self._schema_registry_client
         )
+
+    def serialize(self, item):
+        key = json.loads(item.json(include={self._key})) if self._key else None
+        value = json.loads(item.json())
+        return key, value
 
     @property
     def _key_schema_string(self):

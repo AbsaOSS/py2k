@@ -19,6 +19,7 @@ from tqdm import tqdm
 from py2k.models import KafkaModel
 from py2k.producer_config import ProducerConfig
 from py2k.producer import KafkaProducer
+from py2k.serializer import KafkaSerializer
 
 
 class KafkaWriter(object):
@@ -45,11 +46,13 @@ class KafkaWriter(object):
         self._producer = None
 
     def _create_producer(self, data: List[KafkaModel]):
+        serializer = KafkaSerializer(data[0], self._key,
+                                     self._schema_registry_config)
+
         producer_config = ProducerConfig(
             self._key,
             self._producer_config,
-            self._schema_registry_config,
-            data[0]
+            serializer
         )
 
         self._producer = KafkaProducer(self._topic, producer_config)

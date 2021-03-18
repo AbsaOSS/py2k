@@ -19,16 +19,18 @@ from confluent_kafka import KafkaError, Message
 class KafkaProducer:
     def __init__(self, topic, producer_config):
         self._topic = topic
-        self._key = producer_config.key
         self._producer = SerializingProducer(producer_config.dict)
+        self._serializer = producer_config.serializer
 
     def produce(self, item):
         while True:
             try:
+                key, value = self._serializer.serialize(item)
+
                 self._producer.produce(
                     topic=self._topic,
-                    key=item if self._key else None,
-                    value=item,
+                    key=key,
+                    value=value,
                     on_delivery=self._delivery_report
                 )
                 self._producer.poll(0)

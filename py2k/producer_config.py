@@ -15,22 +15,21 @@
 
 from copy import deepcopy
 
-from py2k.serializer import KafkaSerializer
-
 
 class ProducerConfig:
-    def __init__(self, key, default_config, schema_registry_config, item):
+    def __init__(self, key, default_config, serializer):
         self._key = key
         self._default_config = default_config
+        self._serializer = serializer
         self._config_build = None
-
-        self._serializer = KafkaSerializer(item,
-                                           key,
-                                           schema_registry_config)
 
     @property
     def key(self):
         return self._key
+
+    @property
+    def serializer(self):
+        return self._serializer
 
     @property
     def dict(self):
@@ -40,8 +39,9 @@ class ProducerConfig:
         config_build = deepcopy(self._default_config)
         config_build['value.serializer'] = self._serializer.value_serializer()
 
-        if self._key:
-            config_build['key.serializer'] = self._serializer.key_serializer()
+        key_serializer = self._serializer.key_serializer()
+        if key_serializer:
+            config_build['key.serializer'] = key_serializer
 
         self._config_build = config_build
         return self._config_build
