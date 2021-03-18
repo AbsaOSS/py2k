@@ -27,11 +27,9 @@ class ProducerConfig:
     def __init__(self, key, default_config, schema_registry_config, data):
         self._key = key
         self._default_config = default_config
-        self.schema_registry_client = SchemaRegistryClient(
-            schema_registry_config)
-        self._data = data
-        self._value_schema_string = self._get_schema_string(self._data[0])
         self._config_build = None
+
+        self._serializer = KafkaSerializer(data[0], schema_registry_config)
 
     def get(self):
         if self._config_build:
@@ -47,44 +45,51 @@ class ProducerConfig:
 
     @property
     def _value_serializer_config(self):
-        avro_value_serializer = AvroSerializer(
-            self._value_schema_string,
-            self.schema_registry_client,
-            to_dict=self._results_to_dict
-        )
-        return {'value.serializer': avro_value_serializer}
+        return {'value.serializer': self._serializer.value_serializer()}
 
     @property
     def _key_serializer_config(self):
         if not self._key:
             return {}
 
-        avro_key_serializer = AvroSerializer(
-            schema_str=self._key_schema_string,
-            schema_registry_client=self.schema_registry_client
-        )
-        return {'key.serializer': avro_key_serializer}
+        return {'key.serializer': self._serializer.key_serializer(self._key)}
 
-    @property
-    def _key_schema_string(self):
+
+class KafkaSerializer:
+    def __init__(self, item: KafkaModel, schema_registry_config: dict):
+        self._item = item
+        self._schema_registry_client = SchemaRegistryClient(
+            schema_registry_config)
+
+    def value_serializer(self):
+        return AvroSerializer(
+            self._item.value_schema_string,
+            self._schema_registry_client,
+            to_dict=self._results_to_dict
+        )
+
+    def key_serializer(self, key):
+        return AvroSerializer(
+            schema_str=self._key_schema_string(key),
+            schema_registry_client=self._schema_registry_client
+        )
+
+    def _key_schema_string(self, key):
         key_schema = {}
-        _value_schema = json.loads(self._value_schema_string)
+        _value_schema = json.loads(self._item.schema_json())
         key_schema['type'] = _value_schema['type']
         key_schema['name'] = f'{_value_schema["name"]}Key'
         key_schema['namespace'] = _value_schema['namespace']
-        key_schema['fields'] = self._find_key_fields(_value_schema['fields'])
+        key_schema['fields'] = self._find_key_fields(key, _value_schema['fields'])
         return str(key_schema).replace("'", "\"")
 
     @staticmethod
-    def _get_schema_string(item: KafkaModel):
-        return item.schema_json()
+    def _find_key_fields(key, fields: List[Dict[str, Any]]) -> Dict[str, Any]:
+        def is_key(field):
+            return any(v == key for _, v in field.items())
+
+        return [field for field in fields if is_key(field)]
 
     @staticmethod
     def _results_to_dict(results: KafkaModel, _):
         return json.loads(results.json())
-
-    def _find_key_fields(self, fields: List[Dict[str, Any]]) -> Dict[str, Any]:
-        def is_key(field):
-            return any(v == self._key for _, v in field.items())
-
-        return [field for field in fields if is_key(field)]
