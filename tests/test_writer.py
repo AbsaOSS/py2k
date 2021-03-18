@@ -39,21 +39,6 @@ def raw_input():
          'Timesince': 4,
          'Applicableto': '2020-09',
          'Generationdate': datetime.date(2020, 8, 2)},
-        {'Customerkey': 'Daniel',
-         'Predictedvalue': 123,
-         'Timesince': 4,
-         'Applicableto': '2020-03',
-         'Generationdate': datetime.date(2020, 12, 9)},
-        {'Customerkey': 'Dennis',
-         'Predictedvalue': 44123.02,
-         'Timesince': 4,
-         'Applicableto': '2020-10',
-         'Generationdate': datetime.date(2020, 4, 21)},
-        {'Customerkey': 'Felipe',
-         'Predictedvalue': 11111,
-         'Timesince': 4,
-         'Applicableto': '2020-01',
-         'Generationdate': datetime.date(2020, 8, 17)},
     ]
 
 
@@ -66,6 +51,7 @@ def serialized_first_input():
         'Applicableto': '2020-07',
         'Generationdate': '2020-03-20'
     }
+
 
 @pytest.fixture
 def data_class(raw_input):

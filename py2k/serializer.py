@@ -45,9 +45,13 @@ class KafkaSerializer:
         )
 
     def serialize(self, item):
-        key = json.loads(item.json(include={self._key})) if self._key else None
-        value = json.loads(item.json())
+        key = self._serialize_item(item, {self._key}) if self._key else None
+        value = self._serialize_item(item)
         return key, value
+
+    @staticmethod
+    def _serialize_item(item, include=None):
+        return json.loads(item.json(include=include))
 
     @property
     def _key_schema_string(self):
@@ -64,10 +68,3 @@ class KafkaSerializer:
             return any(v == self._key for _, v in field.items())
 
         return [field for field in fields if is_key(field)]
-
-    @staticmethod
-    def _to_dict_func(include=None):
-        def to_dict(results: KafkaModel, _):
-            return json.loads(results.json(include=include))
-
-        return to_dict
