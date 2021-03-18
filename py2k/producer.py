@@ -12,9 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-from uuid import uuid4
-
 from confluent_kafka import SerializingProducer
 from confluent_kafka import KafkaError, Message
 

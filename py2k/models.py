@@ -59,12 +59,6 @@ class KafkaModel(BaseModel):
             datetime.datetime: lambda v: str(v),
         }
 
-        @classmethod
-        def alias_generator(cls, string: str) -> str:
-            # this is the same as `alias_generator = to_camel` above
-            return string
-            # return ''.join(word.capitalize() for word in string.split('_'))
-
         @staticmethod
         def schema_extra(schema: Dict[str, Any],
                          model: Type['KafkaModel']) -> None:
