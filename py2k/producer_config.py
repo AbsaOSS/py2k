@@ -28,7 +28,12 @@ class ProducerConfig:
                                            key,
                                            schema_registry_config)
 
-    def get(self):
+    @property
+    def key(self):
+        return self._key
+
+    @property
+    def dict(self):
         if self._config_build:
             return self._config_build
 

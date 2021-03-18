@@ -52,8 +52,7 @@ class KafkaWriter(object):
             data[0]
         )
 
-        self._producer = KafkaProducer(
-            self._topic, self._key, producer_config)
+        self._producer = KafkaProducer(self._topic, producer_config)
 
     def write(self, data: List[KafkaModel]):
         """writes data to Kafka

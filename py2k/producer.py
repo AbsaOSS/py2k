@@ -17,10 +17,10 @@ from confluent_kafka import KafkaError, Message
 
 
 class KafkaProducer:
-    def __init__(self, topic, key, producer_config):
+    def __init__(self, topic, producer_config):
         self._topic = topic
-        self._key = key
-        self._producer = SerializingProducer(producer_config.get())
+        self._key = producer_config.key
+        self._producer = SerializingProducer(producer_config.dict)
 
     def produce(self, item):
         while True:
