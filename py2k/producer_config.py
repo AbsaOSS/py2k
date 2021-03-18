@@ -13,15 +13,9 @@
 # limitations under the License.
 
 
-import json
 from copy import deepcopy
-from typing import List, Dict, Any
 
-from confluent_kafka.schema_registry import SchemaRegistryClient
-from confluent_kafka.schema_registry.avro import AvroSerializer
-from pydantic import create_model
-
-from py2k.models import KafkaModel
+from py2k.serializer import KafkaSerializer
 
 
 class ProducerConfig:
@@ -30,7 +24,7 @@ class ProducerConfig:
         self._default_config = default_config
         self._config_build = None
 
-        self._serializer = KafkaSerializer(data[0], schema_registry_config)
+        self._serializer = KafkaSerializer(data[0], key, schema_registry_config)
 
     def get(self):
         if self._config_build:
@@ -53,37 +47,6 @@ class ProducerConfig:
         if not self._key:
             return {}
 
-        return {'key.serializer': self._serializer.key_serializer(self._key)}
+        return {'key.serializer': self._serializer.key_serializer()}
 
 
-class KafkaSerializer:
-    def __init__(self, item: KafkaModel, schema_registry_config: dict):
-        self._item = item
-        self._schema_registry_client = SchemaRegistryClient(
-            schema_registry_config)
-
-    def value_serializer(self):
-        return AvroSerializer(
-            self._item.schema_json(),
-            self._schema_registry_client,
-            to_dict=self._results_to_dict
-        )
-
-    def key_serializer(self, key):
-        return AvroSerializer(
-            schema_str=self._key_schema_string(key),
-            schema_registry_client=self._schema_registry_client,
-        )
-
-    def _key_schema_string(self, key):
-        key_model = create_model(
-            f'{self._item.__repr_name__()}Key',
-            **self._item.dict(include={key}),
-            __base__=KafkaModel
-        )
-
-        return key_model.schema_json()
-
-    @staticmethod
-    def _results_to_dict(results: KafkaModel, _):
-        return json.loads(results.json())

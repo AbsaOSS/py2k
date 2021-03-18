@@ -21,6 +21,7 @@ import pytest
 
 import py2k.producer_config
 import py2k.producer
+import py2k.serializer
 from py2k.models import KafkaModel
 from py2k.writer import KafkaWriter
 
@@ -141,16 +142,14 @@ def test_pushes_one_item_of_model_data(monkeypatch, data_class):
     producer_class.return_value = producer
 
     monkeypatch.setattr(py2k.producer, 'SerializingProducer', producer_class)
-    monkeypatch.setattr(py2k.producer_config,
+    monkeypatch.setattr(py2k.serializer,
                         'SchemaRegistryClient', MagicMock())
 
     writer = KafkaWriter(topic, {}, {}, key)
     writer.write(one_item_list)
 
-    expected_key = {key: getattr(one_item, key)}
-
     producer.produce.assert_called_with(
-        topic=topic, key=expected_key, value=one_item, on_delivery=ANY)
+        topic=topic, key=one_item, value=one_item, on_delivery=ANY)
     producer.poll.assert_called_with(0)
 
 
@@ -164,12 +163,12 @@ def test_pushes_one_item_of_model_data_without_key(monkeypatch, data_class):
     producer_class.return_value = producer
 
     monkeypatch.setattr(py2k.producer, 'SerializingProducer', producer_class)
-    monkeypatch.setattr(py2k.producer_config,
+    monkeypatch.setattr(py2k.serializer,
                         'SchemaRegistryClient', MagicMock())
 
     writer = KafkaWriter(topic, {}, {})
     writer.write(one_item_list)
 
     producer.produce.assert_called_with(
-        topic=topic, key=ANY, value=one_item, on_delivery=ANY)
+        topic=topic, key=None, value=one_item, on_delivery=ANY)
     producer.poll.assert_called_with(0)

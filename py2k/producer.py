@@ -28,13 +28,9 @@ class KafkaProducer:
     def produce(self, item):
         while True:
             try:
-                print(item)
-                print(type(item))
-                key = self._key_object(item)
-
                 self._producer.produce(
                     topic=self._topic,
-                    key=key,
+                    key=item if self._key else None,
                     value=item,
                     on_delivery=self._delivery_report
                 )
@@ -42,19 +38,13 @@ class KafkaProducer:
                 break
             except BufferError as e:
                 print(
-                    f'Failed to send on attempt {key}. '
+                    f'Failed to send on attempt {item}. '
                     f'Error received {str(e)}')
                 self._producer.poll(1)
 
     def flush(self):
         if self._producer:
             self._producer.flush()
-
-    def _key_object(self, item):
-        if self._key:
-            return item.dict(include={self._key})
-        else:
-            return str(uuid4())
 
     @staticmethod
     def _delivery_report(err: KafkaError, msg: Message):
