@@ -49,11 +49,7 @@ class KafkaWriter(object):
         serializer = KafkaSerializer(data[0], self._key,
                                      self._schema_registry_config)
 
-        producer_config = ProducerConfig(
-            self._key,
-            self._producer_config,
-            serializer
-        )
+        producer_config = ProducerConfig(self._producer_config, serializer)
 
         self._producer = KafkaProducer(self._topic, producer_config)
 

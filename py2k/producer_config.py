@@ -17,15 +17,10 @@ from copy import deepcopy
 
 
 class ProducerConfig:
-    def __init__(self, key, default_config, serializer):
-        self._key = key
+    def __init__(self, default_config, serializer):
         self._default_config = default_config
         self._serializer = serializer
         self._config_build = None
-
-    @property
-    def key(self):
-        return self._key
 
     @property
     def serializer(self):
