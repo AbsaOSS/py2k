@@ -49,7 +49,7 @@ class KafkaWriter(object):
             self._key,
             self._producer_config,
             self._schema_registry_config,
-            data
+            data[0]
         )
 
         self._producer = KafkaProducer(

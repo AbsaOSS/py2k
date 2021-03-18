@@ -19,34 +19,28 @@ from py2k.serializer import KafkaSerializer
 
 
 class ProducerConfig:
-    def __init__(self, key, default_config, schema_registry_config, data):
+    def __init__(self, key, default_config, schema_registry_config, item):
         self._key = key
         self._default_config = default_config
         self._config_build = None
 
-        self._serializer = KafkaSerializer(data[0], key, schema_registry_config)
+        self._serializer = KafkaSerializer(item,
+                                           key,
+                                           schema_registry_config)
 
     def get(self):
         if self._config_build:
             return self._config_build
 
         config_build = deepcopy(self._default_config)
-        serializer_configs = {
-            **self._value_serializer_config, **self._key_serializer_config}
-        config_build.update(serializer_configs)
+        config_build['value.serializer'] = self._serializer.value_serializer()
+
+        if self._key:
+            config_build['key.serializer'] = self._serializer.key_serializer()
 
         self._config_build = config_build
         return self._config_build
 
-    @property
-    def _value_serializer_config(self):
-        return {'value.serializer': self._serializer.value_serializer()}
 
-    @property
-    def _key_serializer_config(self):
-        if not self._key:
-            return {}
-
-        return {'key.serializer': self._serializer.key_serializer()}
 
 
