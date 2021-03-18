@@ -18,7 +18,7 @@ from tqdm import tqdm
 
 from py2k.models import KafkaModel
 from py2k.producer_config import ProducerConfig
-from py2k.serializer import KafkaSerializer
+from py2k.producer import KafkaProducer
 
 
 class KafkaWriter(object):
@@ -39,18 +39,20 @@ class KafkaWriter(object):
         """
 
         self._topic = topic
-        self._default_producer_config = producer_config
+        self._producer_config = producer_config
         self._key = key
         self._schema_registry_config = schema_registry_config
-        self._serializer = None
+        self._producer = None
 
-    def _create_serializer(self, data: List[KafkaModel]):
+    def _create_producer(self, data: List[KafkaModel]):
         producer_config = ProducerConfig(
             self._key,
-            self._default_producer_config,
-            self._schema_registry_config, data)
+            self._producer_config,
+            self._schema_registry_config,
+            data
+        )
 
-        self._serializer = KafkaSerializer(
+        self._producer = KafkaProducer(
             self._topic, self._key, producer_config)
 
     def write(self, data: List[KafkaModel]):
@@ -59,8 +61,8 @@ class KafkaWriter(object):
         Args:
             data (List[KafkaModel]): Serialized `KafkaModel` objects
         """
-        self._create_serializer(data)
+        self._create_producer(data)
         for item in tqdm(data):
-            self._serializer.produce(item)
+            self._producer.produce(item)
 
-        self._serializer.flush()
+        self._producer.flush()

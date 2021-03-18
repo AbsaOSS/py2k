@@ -20,7 +20,7 @@ import pandas as pd
 import pytest
 
 import py2k.producer_config
-import py2k.serializer
+import py2k.producer
 from py2k.models import KafkaModel
 from py2k.writer import KafkaWriter
 
@@ -140,7 +140,7 @@ def test_pushes_one_item_of_model_data(monkeypatch, data_class):
     producer = MagicMock()
     producer_class.return_value = producer
 
-    monkeypatch.setattr(py2k.serializer, 'SerializingProducer', producer_class)
+    monkeypatch.setattr(py2k.producer, 'SerializingProducer', producer_class)
     monkeypatch.setattr(py2k.producer_config,
                         'SchemaRegistryClient', MagicMock())
 
@@ -163,7 +163,7 @@ def test_pushes_one_item_of_model_data_without_key(monkeypatch, data_class):
     producer = MagicMock()
     producer_class.return_value = producer
 
-    monkeypatch.setattr(py2k.serializer, 'SerializingProducer', producer_class)
+    monkeypatch.setattr(py2k.producer, 'SerializingProducer', producer_class)
     monkeypatch.setattr(py2k.producer_config,
                         'SchemaRegistryClient', MagicMock())
 

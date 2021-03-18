@@ -19,7 +19,7 @@ from confluent_kafka import SerializingProducer
 from confluent_kafka import KafkaError, Message
 
 
-class KafkaSerializer:
+class KafkaProducer:
     def __init__(self, topic, key, producer_config):
         self._topic = topic
         self._key = key
