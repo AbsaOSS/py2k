@@ -19,6 +19,7 @@ from typing import List, Dict, Any
 
 from confluent_kafka.schema_registry import SchemaRegistryClient
 from confluent_kafka.schema_registry.avro import AvroSerializer
+from pydantic import create_model
 
 from py2k.models import KafkaModel
 
@@ -63,7 +64,7 @@ class KafkaSerializer:
 
     def value_serializer(self):
         return AvroSerializer(
-            self._item.value_schema_string,
+            self._item.schema_json(),
             self._schema_registry_client,
             to_dict=self._results_to_dict
         )
@@ -71,24 +72,17 @@ class KafkaSerializer:
     def key_serializer(self, key):
         return AvroSerializer(
             schema_str=self._key_schema_string(key),
-            schema_registry_client=self._schema_registry_client
+            schema_registry_client=self._schema_registry_client,
         )
 
     def _key_schema_string(self, key):
-        key_schema = {}
-        _value_schema = json.loads(self._item.schema_json())
-        key_schema['type'] = _value_schema['type']
-        key_schema['name'] = f'{_value_schema["name"]}Key'
-        key_schema['namespace'] = _value_schema['namespace']
-        key_schema['fields'] = self._find_key_fields(key, _value_schema['fields'])
-        return str(key_schema).replace("'", "\"")
+        key_model = create_model(
+            f'{self._item.__repr_name__()}Key',
+            **self._item.dict(include={key}),
+            __base__=KafkaModel
+        )
 
-    @staticmethod
-    def _find_key_fields(key, fields: List[Dict[str, Any]]) -> Dict[str, Any]:
-        def is_key(field):
-            return any(v == key for _, v in field.items())
-
-        return [field for field in fields if is_key(field)]
+        return key_model.schema_json()
 
     @staticmethod
     def _results_to_dict(results: KafkaModel, _):

@@ -85,10 +85,6 @@ class KafkaModel(BaseModel):
     def schema_from_iter(iterator: IterableAdapter):
         return list(itertools.islice(iterator, 1))[0].schema_json()
 
-    @property
-    def value_schema_string(self):
-        return self.schema_json()
-
 
 class DynamicKafkaModel:
     """ class model for automatic serialization of Pandas DataFrame to

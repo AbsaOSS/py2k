@@ -28,6 +28,8 @@ class KafkaProducer:
     def produce(self, item):
         while True:
             try:
+                print(item)
+                print(type(item))
                 key = self._key_object(item)
 
                 self._producer.produce(
@@ -50,7 +52,7 @@ class KafkaProducer:
 
     def _key_object(self, item):
         if self._key:
-            return {self._key: item.dict()[self._key]}
+            return item.dict(include={self._key})
         else:
             return str(uuid4())
 
