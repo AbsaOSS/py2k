@@ -20,13 +20,41 @@ import pandas as pd
 import pytest
 
 import py2k.producer_config
+import py2k.producer
 import py2k.serializer
 from py2k.models import KafkaModel
 from py2k.writer import KafkaWriter
 
 
 @pytest.fixture
-def data_class():
+def raw_input():
+    return [
+        {'Customerkey': 'Adam',
+         'Predictedvalue': 123.22,
+         'Timesince': 4,
+         'Applicableto': '2020-07',
+         'Generationdate': datetime.date(2020, 3, 20)},
+        {'Customerkey': 'Andy',
+         'Predictedvalue': 12545.0,
+         'Timesince': 4,
+         'Applicableto': '2020-09',
+         'Generationdate': datetime.date(2020, 8, 2)},
+    ]
+
+
+@pytest.fixture
+def serialized_first_input():
+    return {
+        'Customerkey': 'Adam',
+        'Predictedvalue': 123.22,
+        'Timesince': 4,
+        'Applicableto': '2020-07',
+        'Generationdate': '2020-03-20'
+    }
+
+
+@pytest.fixture
+def data_class(raw_input):
     class ModelResult(KafkaModel):
         Customerkey: str
         Predictedvalue: float
@@ -34,67 +62,13 @@ def data_class():
         Applicableto: str
         Generationdate: datetime.date
 
-    result = [
-        {'Customerkey': 'Adam',
-         'Predictedvalue': 123.22,
-         'Timesince': 4,
-         'Applicableto': '2020-07',
-         'Generationdate': datetime.date(2020, 3, 20)},
-        {'Customerkey': 'Andy',
-         'Predictedvalue': 12545.0,
-         'Timesince': 4,
-         'Applicableto': '2020-09',
-         'Generationdate': datetime.date(2020, 8, 2)},
-        {'Customerkey': 'Daniel',
-         'Predictedvalue': 123,
-         'Timesince': 4,
-         'Applicableto': '2020-03',
-         'Generationdate': datetime.date(2020, 12, 9)},
-        {'Customerkey': 'Dennis',
-         'Predictedvalue': 44123.02,
-         'Timesince': 4,
-         'Applicableto': '2020-10',
-         'Generationdate': datetime.date(2020, 4, 21)},
-        {'Customerkey': 'Felipe',
-         'Predictedvalue': 11111,
-         'Timesince': 4,
-         'Applicableto': '2020-01',
-         'Generationdate': datetime.date(2020, 8, 17)},
-    ]
-    output = [ModelResult(**value) for value in result]
+    output = [ModelResult(**value) for value in raw_input]
     return output
 
 
 @pytest.fixture
-def pandas_dataframe():
-    result = [
-        {'Customerkey': 'Adam',
-         'Predictedvalue': 123.22,
-         'Timesince': 4,
-         'Applicableto': '2020-07',
-         'Generationdate': datetime.date(2020, 3, 20)},
-        {'Customerkey': 'Andy',
-         'Predictedvalue': 12545.0,
-         'Timesince': 4,
-         'Applicableto': '2020-09',
-         'Generationdate': datetime.date(2020, 8, 2)},
-        {'Customerkey': 'Daniel',
-         'Predictedvalue': 123,
-         'Timesince': 4,
-         'Applicableto': '2020-03',
-         'Generationdate': datetime.date(2020, 12, 9)},
-        {'Customerkey': 'Dennis',
-         'Predictedvalue': 44123.02,
-         'Timesince': 4,
-         'Applicableto': '2020-10',
-         'Generationdate': datetime.date(2020, 4, 21)},
-        {'Customerkey': 'Felipe',
-         'Predictedvalue': 11111,
-         'Timesince': 4,
-         'Applicableto': '2020-01',
-         'Generationdate': datetime.date(2020, 8, 17)},
-    ]
-    return pd.DataFrame(result)
+def pandas_dataframe(raw_input):
+    return pd.DataFrame(raw_input)
 
 
 def test_kafka_model(data_class):
@@ -130,46 +104,48 @@ def test_pandas_serializer(pandas_dataframe, data_class):
     assert actual == expected
 
 
-def test_pushes_one_item_of_model_data(monkeypatch, data_class):
+def test_pushes_one_item_of_model_data(monkeypatch, data_class,
+                                       serialized_first_input):
     topic = "DUMMY_TOPIC"
     key = "Customerkey"
-    one_item = data_class[0]
-    one_item_list = [one_item]
+
+    one_item_list = data_class[:1]
 
     producer_class = MagicMock()
     producer = MagicMock()
     producer_class.return_value = producer
 
-    monkeypatch.setattr(py2k.serializer, 'SerializingProducer', producer_class)
-    monkeypatch.setattr(py2k.producer_config,
+    monkeypatch.setattr(py2k.producer, 'SerializingProducer', producer_class)
+    monkeypatch.setattr(py2k.serializer,
                         'SchemaRegistryClient', MagicMock())
 
     writer = KafkaWriter(topic, {}, {}, key)
     writer.write(one_item_list)
 
-    expected_key = {key: getattr(one_item, key)}
+    expected_key = {key: serialized_first_input[key]}
 
     producer.produce.assert_called_with(
-        topic=topic, key=expected_key, value=one_item, on_delivery=ANY)
+        topic=topic, key=expected_key, value=serialized_first_input,
+        on_delivery=ANY)
     producer.poll.assert_called_with(0)
 
 
-def test_pushes_one_item_of_model_data_without_key(monkeypatch, data_class):
+def test_pushes_one_item_of_model_data_without_key(monkeypatch, data_class,
+                                                   serialized_first_input):
     topic = "DUMMY_TOPIC"
-    one_item = data_class[0]
-    one_item_list = [one_item]
+    one_item_list = data_class[:1]
 
     producer_class = MagicMock()
     producer = MagicMock()
     producer_class.return_value = producer
 
-    monkeypatch.setattr(py2k.serializer, 'SerializingProducer', producer_class)
-    monkeypatch.setattr(py2k.producer_config,
+    monkeypatch.setattr(py2k.producer, 'SerializingProducer', producer_class)
+    monkeypatch.setattr(py2k.serializer,
                         'SchemaRegistryClient', MagicMock())
 
     writer = KafkaWriter(topic, {}, {})
     writer.write(one_item_list)
 
     producer.produce.assert_called_with(
-        topic=topic, key=ANY, value=one_item, on_delivery=ANY)
+        topic=topic, key=None, value=serialized_first_input, on_delivery=ANY)
     producer.poll.assert_called_with(0)

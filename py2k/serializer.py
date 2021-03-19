@@ -13,67 +13,58 @@
 # limitations under the License.
 
 
-from uuid import uuid4
+import json
+from typing import List, Dict, Any
 
-from confluent_kafka import SerializingProducer
-from confluent_kafka import KafkaError, Message
+from confluent_kafka.schema_registry import SchemaRegistryClient
+from confluent_kafka.schema_registry.avro import AvroSerializer
+
+from py2k.models import KafkaModel
 
 
 class KafkaSerializer:
-    def __init__(self, topic, key, producer_config):
-        self._topic = topic
+    def __init__(self, item: KafkaModel, key, schema_registry_config: dict):
+        self._item = item
         self._key = key
-        self._producer = SerializingProducer(producer_config.get())
+        self._schema_registry_client = SchemaRegistryClient(
+            schema_registry_config)
 
-    def produce(self, item):
-        while True:
-            try:
-                key = self._key_object(item)
+    def value_serializer(self):
+        return AvroSerializer(
+            self._item.schema_json(),
+            self._schema_registry_client
+        )
 
-                self._producer.produce(
-                    topic=self._topic,
-                    key=key,
-                    value=item,
-                    on_delivery=self._delivery_report
-                )
-                self._producer.poll(0)
-                break
-            except BufferError as e:
-                print(
-                    f'Failed to send on attempt {key}. '
-                    f'Error received {str(e)}')
-                self._producer.poll(1)
+    def key_serializer(self):
+        if not self._key:
+            return None
 
-    def flush(self):
-        if self._producer:
-            self._producer.flush()
+        return AvroSerializer(
+            schema_str=self._key_schema_string,
+            schema_registry_client=self._schema_registry_client
+        )
 
-    def _key_object(self, item):
-        if self._key:
-            return {self._key: item.dict()[self._key]}
-        else:
-            return str(uuid4())
+    def serialize(self, item):
+        key = self._serialize_item(item, {self._key}) if self._key else None
+        value = self._serialize_item(item)
+        return key, value
 
     @staticmethod
-    def _delivery_report(err: KafkaError, msg: Message):
-        """ Reports the failure or success of a message delivery.
+    def _serialize_item(item, include=None):
+        return json.loads(item.json(include=include))
 
-        Note:
-            In the delivery report callback the Message.key()
-            and Message.value() will be the binary format as
-            encoded by any configured Serializers and
-            not the same object that was passed to produce().
-            If you wish to pass the original object(s)
-            for key and value to delivery
-            report callback we recommend a bound callback
-            or lambda where you pass the objects along.
+    @property
+    def _key_schema_string(self):
+        key_schema = {}
+        _value_schema = json.loads(self._item.schema_json())
+        key_schema['type'] = _value_schema['type']
+        key_schema['name'] = f'{_value_schema["name"]}Key'
+        key_schema['namespace'] = _value_schema['namespace']
+        key_schema['fields'] = self._find_key_fields(_value_schema['fields'])
+        return str(key_schema).replace("'", "\"")
 
-        Args:
-            err ([KafkaError]): The error that occurred on None on success.
-            msg ([Message]): The message that was produced or failed.
-        """
+    def _find_key_fields(self, fields: List[Dict[str, Any]]) -> Dict[str, Any]:
+        def is_key(field):
+            return any(v == self._key for _, v in field.items())
 
-        if err is not None:
-            print(
-                f"Delivery failed for record {msg.key()}: {err}"
-            )
+        return [field for field in fields if is_key(field)]
