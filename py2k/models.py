@@ -14,6 +14,7 @@
 
 import datetime
 import itertools
+import json
 import warnings
 from typing import Any, Dict, List, Type
 
@@ -50,8 +51,8 @@ class KafkaModel(BaseModel):
     @classmethod
     def iter_from_pandas(cls, df: pd.DataFrame):
         def iter_pandas(cls, df: pd.DataFrame):
-            for item in df.to_dict('records'):
-                yield cls(**item)
+            for record in df.to_dict('records'):
+                yield cls(**record)
         return IterableAdapter(lambda: iter_pandas(cls, df))
 
     class Config:
@@ -79,6 +80,15 @@ class KafkaModel(BaseModel):
     @staticmethod
     def schema_from_iter(iterator: IterableAdapter):
         return list(itertools.islice(iterator, 1))[0].schema_json()
+
+    def value_to_avro_dict(self):
+        return json.loads(self.json())
+
+    def key_to_avro_dict(self):
+        if not self.key_fields:
+            return None
+
+        return json.loads(self.json(include=set(self.key_fields)))
 
     @property
     def key_fields(self):

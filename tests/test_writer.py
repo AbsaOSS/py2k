@@ -67,6 +67,20 @@ def data_class(raw_input):
 
 
 @pytest.fixture
+def data_class_with_key(raw_input):
+    class ModelResult(KafkaModel):
+        __key_fields__ = ['Customerkey']
+        Customerkey: str
+        Predictedvalue: float
+        Timesince: Optional[int]
+        Applicableto: str
+        Generationdate: datetime.date
+
+    output = [ModelResult(**value) for value in raw_input]
+    return output
+
+
+@pytest.fixture
 def pandas_dataframe(raw_input):
     return pd.DataFrame(raw_input)
 
@@ -104,12 +118,12 @@ def test_pandas_serializer(pandas_dataframe, data_class):
     assert actual == expected
 
 
-def test_pushes_one_item_of_model_data(monkeypatch, data_class,
+def test_pushes_one_item_of_model_data(monkeypatch, data_class_with_key,
                                        serialized_first_input):
     topic = "DUMMY_TOPIC"
     key = "Customerkey"
 
-    one_item_list = data_class[:1]
+    one_item_list = data_class_with_key[:1]
 
     producer_class = MagicMock()
     producer = MagicMock()
@@ -119,7 +133,7 @@ def test_pushes_one_item_of_model_data(monkeypatch, data_class,
     monkeypatch.setattr(py2k.serializer,
                         'SchemaRegistryClient', MagicMock())
 
-    writer = KafkaWriter(topic, {}, {}, key)
+    writer = KafkaWriter(topic, {}, {})
     writer.write(one_item_list)
 
     expected_key = {key: serialized_first_input[key]}
