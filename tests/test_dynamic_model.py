@@ -198,6 +198,14 @@ def test_supported_optional_types(value, _type):
     _assert_schema_types(records[0], expected)
 
 
+def test_specification_of_key_fields():
+    df = pd.DataFrame({'column_1': [1], 'key': ['key_val']})
+
+    model = DynamicKafkaModel(df, 'TestModel', key_fields=['key'])
+    record = model.from_pandas(df)[0]
+    assert record.key_fields == ['key']
+
+
 def _assert_records(records, test_data):
     # makes sure all records were converted
     assert len(records) == len(test_data)

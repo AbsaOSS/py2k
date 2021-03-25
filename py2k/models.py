@@ -93,7 +93,8 @@ class DynamicKafkaModel:
     def __init__(self, df: pd.DataFrame, model_name: str,
                  fields_defaults: Dict[str, object] = None,
                  types_defaults: Dict[object, object] = None,
-                 optional_fields: List[str] = None):
+                 optional_fields: List[str] = None,
+                 key_fields: List[str] = None):
         """
         Args:
             df (pd.DataFrame): Pandas dataframe to serialize
@@ -106,12 +107,16 @@ class DynamicKafkaModel:
                  e.g. int. Defaults to None.
             optional_fields (List[str], optional): list of fields which should
                  be marked as optional. Defaults to None.
+            key_fields (List[str], optional): list of fields which are meant
+                to be key of the schema
         """
+
         self._df = df
+        _class = self._class(key_fields)
 
         model_creator = PandasModelCreator(df, model_name, fields_defaults,
                                            types_defaults, optional_fields,
-                                           KafkaModel)
+                                           _class)
 
         self._model = model_creator.create()
 
@@ -128,3 +133,13 @@ class DynamicKafkaModel:
             return self._model.from_pandas(df)
 
         return self._model.from_pandas(self._df)
+
+    @staticmethod
+    def _class(key_fields):
+        if not key_fields:
+            return KafkaModel
+
+        class WithKey(KafkaModel):
+            __key_fields__ = key_fields
+
+        return WithKey
