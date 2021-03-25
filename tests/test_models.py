@@ -45,6 +45,33 @@ def test_dynamic_model_creates_creator_from_dataframe(model_creator_class):
     assert_frame_equal(df, called_df)
 
 
+def test_user_defines_model_without_key():
+    class MyRecord(KafkaModel):
+        value_1: str
+        value_2: int
+
+    df = pd.DataFrame({
+        'value_1': ['a', 'b'],
+        'value_2': [1, 2]
+    })
+    record = MyRecord.from_pandas(df)[0]
+    assert record.key_fields is None
+
+
+def test_user_defines_model_with_one_key():
+    class MyRecord(KafkaModel):
+        value_1: str
+        key_field: str
+        __key_fields__ = ['key_field']
+
+    df = pd.DataFrame({
+        'value_1': ['a', 'b'],
+        'key_field': [1, 2]
+    })
+    record = MyRecord.from_pandas(df)[0]
+    assert record.key_fields == ['key_field']
+
+
 @pytest.fixture
 def model_creator():
     return MagicMock()

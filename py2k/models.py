@@ -34,6 +34,7 @@ class IterableAdapter:
 
 
 class KafkaModel(BaseModel):
+    __key_fields__ = None
 
     @classmethod
     def from_pandas(cls, df: pd.DataFrame) -> List['KafkaModel']:
@@ -78,6 +79,10 @@ class KafkaModel(BaseModel):
     @staticmethod
     def schema_from_iter(iterator: IterableAdapter):
         return list(itertools.islice(iterator, 1))[0].schema_json()
+
+    @property
+    def key_fields(self):
+        return self.__key_fields__
 
 
 class DynamicKafkaModel:
