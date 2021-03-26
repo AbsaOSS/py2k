@@ -13,9 +13,6 @@
 # limitations under the License.
 
 
-import json
-from typing import List, Dict, Any
-
 from confluent_kafka.schema_registry import SchemaRegistryClient
 from confluent_kafka.schema_registry.avro import AvroSerializer
 
@@ -32,7 +29,7 @@ class KafkaSerializer:
 
     def value_serializer(self):
         return AvroSerializer(
-            schema_str=self._value_schema_string,
+            schema_str=self._record.value_schema_string,
             schema_registry_client=self._schema_registry_client,
         )
 
@@ -41,34 +38,6 @@ class KafkaSerializer:
             return None
 
         return AvroSerializer(
-            schema_str=self._key_schema_string,
+            schema_str=self._record.key_schema_string,
             schema_registry_client=self._schema_registry_client
         )
-
-    @property
-    def _value_schema_string(self):
-        _value_schema = json.loads(self._record.schema_json())
-        if self._key_fields and not self._key_included:
-            fields = _value_schema['fields']
-            _value_schema['fields'] = self._find_val_fields(fields)
-
-        return str(_value_schema).replace("'", "\"")
-
-    @property
-    def _key_schema_string(self):
-        key_schema = {}
-        _value_schema = json.loads(self._record.schema_json())
-        key_schema['type'] = _value_schema['type']
-        key_schema['name'] = f'{_value_schema["name"]}Key'
-        key_schema['namespace'] = _value_schema['namespace']
-        key_schema['fields'] = self._find_key_fields(_value_schema['fields'])
-        return str(key_schema).replace("'", "\"")
-
-    def _is_key(self, field):
-        return field.get('name') in self._key_fields
-
-    def _find_val_fields(self, fields: List[Dict[str, Any]]) -> Dict[str, Any]:
-        return [field for field in fields if not self._is_key(field)]
-
-    def _find_key_fields(self, fields: List[Dict[str, Any]]) -> Dict[str, Any]:
-        return [field for field in fields if self._is_key(field)]

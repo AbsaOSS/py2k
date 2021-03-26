@@ -16,6 +16,7 @@ import datetime
 import itertools
 import json
 import warnings
+from copy import deepcopy
 from typing import Any, Dict, List, Type
 
 import pandas as pd
@@ -99,6 +100,39 @@ class KafkaModel(BaseModel):
     @property
     def key_included(self):
         return self.__key_included__
+
+    @property
+    def value_fields(self):
+        if self.key_fields and not self.key_included:
+            dict_without_key = self.dict(exclude=set(self.key_fields))
+            return list(dict_without_key.keys())
+
+        return [name for name in self.__fields__.keys()]
+
+    @property
+    def value_schema_string(self):
+        schema = deepcopy(self.schema())
+        if self.key_fields and not self.key_included:
+            schema['fields'] = self._filter_fields(schema['fields'],
+                                                   self.value_fields)
+        return self._dict_to_str(schema)
+
+    @property
+    def key_schema_string(self):
+        schema = deepcopy(self.schema())
+
+        schema['name'] = f'{schema["name"]}Key'
+        schema['fields'] = self._filter_fields(schema['fields'],
+                                               self.key_fields)
+        return self._dict_to_str(schema)
+
+    @staticmethod
+    def _filter_fields(fields: List[Dict[str, Any]], names: list):
+        return [field for field in fields if field.get('name') in names]
+
+    @staticmethod
+    def _dict_to_str(dictionary):
+        return str(dictionary).replace("'", "\"")
 
 
 class DynamicKafkaModel:
