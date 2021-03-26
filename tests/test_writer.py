@@ -100,6 +100,19 @@ def pandas_dataframe(raw_input):
     return pd.DataFrame(raw_input)
 
 
+@pytest.fixture
+def producer(monkeypatch):
+    producer_class = MagicMock()
+    producer = MagicMock()
+    producer_class.return_value = producer
+
+    monkeypatch.setattr(py2k.producer, 'SerializingProducer', producer_class)
+    monkeypatch.setattr(py2k.serializer,
+                        'SchemaRegistryClient', MagicMock())
+
+    return producer
+
+
 def test_kafka_model(data_class):
     expected = {
         'type': 'record',
@@ -133,23 +146,16 @@ def test_pandas_serializer(pandas_dataframe, data_class):
     assert actual == expected
 
 
-def test_pushes_one_item_of_model_data(monkeypatch, data_class_with_key,
-                                       first_value_dict_without_key,
-                                       first_key_dict):
+def test_pushes_one_record(producer,
+                           data_class_with_key,
+                           first_value_dict_without_key,
+                           first_key_dict):
     topic = "DUMMY_TOPIC"
 
-    one_item_list = data_class_with_key[:1]
-
-    producer_class = MagicMock()
-    producer = MagicMock()
-    producer_class.return_value = producer
-
-    monkeypatch.setattr(py2k.producer, 'SerializingProducer', producer_class)
-    monkeypatch.setattr(py2k.serializer,
-                        'SchemaRegistryClient', MagicMock())
+    records = data_class_with_key[:1]
 
     writer = KafkaWriter(topic, {}, {})
-    writer.write(one_item_list)
+    writer.write(records)
 
     expected_key = first_key_dict
 
@@ -159,22 +165,17 @@ def test_pushes_one_item_of_model_data(monkeypatch, data_class_with_key,
     producer.poll.assert_called_with(0)
 
 
-def test_pushes_one_item_of_model_data_without_key(monkeypatch, data_class,
-                                                   first_value_dict_with_key):
+def test_pushes_one_record_without_key(producer,
+                                       data_class,
+                                       first_value_dict_with_key):
     topic = "DUMMY_TOPIC"
-    one_item_list = data_class[:1]
-
-    producer_class = MagicMock()
-    producer = MagicMock()
-    producer_class.return_value = producer
-
-    monkeypatch.setattr(py2k.producer, 'SerializingProducer', producer_class)
-    monkeypatch.setattr(py2k.serializer,
-                        'SchemaRegistryClient', MagicMock())
+    records = data_class[:1]
 
     writer = KafkaWriter(topic, {}, {})
-    writer.write(one_item_list)
+    writer.write(records)
 
-    producer.produce.assert_called_with(
-        topic=topic, key=None, value=first_value_dict_with_key, on_delivery=ANY)
+    producer.produce.assert_called_with(topic=topic,
+                                        key=None,
+                                        value=first_value_dict_with_key,
+                                        on_delivery=ANY)
     producer.poll.assert_called_with(0)

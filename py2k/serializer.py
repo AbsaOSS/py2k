@@ -26,6 +26,7 @@ class KafkaSerializer:
     def __init__(self, record: KafkaModel, schema_registry_config: dict):
         self._record = record
         self._key_fields = record.key_fields
+        self._key_included = record.key_included
         self._schema_registry_client = SchemaRegistryClient(
             schema_registry_config)
 
@@ -47,7 +48,7 @@ class KafkaSerializer:
     @property
     def _value_schema_string(self):
         _value_schema = json.loads(self._record.schema_json())
-        if self._key_fields:
+        if self._key_fields and not self._key_included:
             fields = _value_schema['fields']
             _value_schema['fields'] = self._find_val_fields(fields)
 

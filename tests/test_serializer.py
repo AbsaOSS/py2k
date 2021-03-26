@@ -60,7 +60,7 @@ def test_schema_string_of_key_serializer(serializer_with_key):
     assert schema == expected_schema
 
 
-def test_schema_string_of_multy_key_serializer(serializer_with_multiple_key):
+def test_schema_string_of_multi_key_serializer(serializer_with_multiple_key):
     key_serializer = serializer_with_multiple_key.key_serializer()
     schema = json.loads(key_serializer.kwargs.get('schema_str'))
 
@@ -80,6 +80,21 @@ def test_value_serializer_without_key_by_default(serializer_with_multiple_key):
     schema = json.loads(value_serializer.kwargs.get('schema_str'))
     expected_schema = {
         'fields': [{'name': 'Field', 'type': 'string'}],
+        'name': 'ModelResult',
+        'namespace': 'python.kafka.modelresult',
+        'type': 'record'
+    }
+    assert schema == expected_schema
+
+
+def test_value_serializer_with_key_when_specified(serializer_key_included):
+    value_serializer = serializer_key_included.value_serializer()
+
+    schema = json.loads(value_serializer.kwargs.get('schema_str'))
+    expected_schema = {
+        'fields': [{'name': 'Field', 'type': 'string'},
+                   {'name': 'Key1', 'type': 'string'},
+                   {'name': 'Key2', 'type': 'string'}],
         'name': 'ModelResult',
         'namespace': 'python.kafka.modelresult',
         'type': 'record'
@@ -121,6 +136,27 @@ def serializer_with_multiple_key(monkeypatch, schema_registry_config):
 
     class ModelResult(KafkaModel):
         __key_fields__ = ['Key1', 'Key2']
+        Field: str
+        Key1: str
+        Key2: str
+
+    df = pd.DataFrame({
+        'Field': ['field_value'],
+        'Key1': ['key1_value'],
+        'Key2': ['key2_value']
+    })
+    record = ModelResult.from_pandas(df)[0]
+
+    return KafkaSerializer(record, schema_registry_config)
+
+
+@pytest.fixture
+def serializer_key_included(monkeypatch, schema_registry_config):
+    monkeypatch.setattr(py2k.serializer, 'AvroSerializer', ParamMock)
+
+    class ModelResult(KafkaModel):
+        __key_fields__ = ['Key1', 'Key2']
+        __key_included__ = True
         Field: str
         Key1: str
         Key2: str
