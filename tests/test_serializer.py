@@ -74,6 +74,19 @@ def test_schema_string_of_multy_key_serializer(serializer_with_multiple_key):
     assert schema == expected_schema
 
 
+def test_value_serializer_without_key_by_default(serializer_with_multiple_key):
+    value_serializer = serializer_with_multiple_key.value_serializer()
+
+    schema = json.loads(value_serializer.kwargs.get('schema_str'))
+    expected_schema = {
+        'fields': [{'name': 'Field', 'type': 'string'}],
+        'name': 'ModelResult',
+        'namespace': 'python.kafka.modelresult',
+        'type': 'record'
+    }
+    assert schema == expected_schema
+
+
 @pytest.fixture
 def serializer_without_key(monkeypatch, schema_registry_config):
     monkeypatch.setattr(py2k.serializer, 'AvroSerializer', ParamMock)

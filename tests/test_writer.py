@@ -43,7 +43,7 @@ def raw_input():
 
 
 @pytest.fixture
-def serialized_first_input():
+def first_value_dict_with_key():
     return {
         'Customerkey': 'Adam',
         'Predictedvalue': 123.22,
@@ -51,6 +51,21 @@ def serialized_first_input():
         'Applicableto': '2020-07',
         'Generationdate': '2020-03-20'
     }
+
+
+@pytest.fixture
+def first_value_dict_without_key():
+    return {
+        'Predictedvalue': 123.22,
+        'Timesince': 4,
+        'Applicableto': '2020-07',
+        'Generationdate': '2020-03-20'
+    }
+
+
+@pytest.fixture
+def first_key_dict():
+    return {'Customerkey': 'Adam'}
 
 
 @pytest.fixture
@@ -119,9 +134,9 @@ def test_pandas_serializer(pandas_dataframe, data_class):
 
 
 def test_pushes_one_item_of_model_data(monkeypatch, data_class_with_key,
-                                       serialized_first_input):
+                                       first_value_dict_without_key,
+                                       first_key_dict):
     topic = "DUMMY_TOPIC"
-    key = "Customerkey"
 
     one_item_list = data_class_with_key[:1]
 
@@ -136,16 +151,16 @@ def test_pushes_one_item_of_model_data(monkeypatch, data_class_with_key,
     writer = KafkaWriter(topic, {}, {})
     writer.write(one_item_list)
 
-    expected_key = {key: serialized_first_input[key]}
+    expected_key = first_key_dict
 
     producer.produce.assert_called_with(
-        topic=topic, key=expected_key, value=serialized_first_input,
+        topic=topic, key=expected_key, value=first_value_dict_without_key,
         on_delivery=ANY)
     producer.poll.assert_called_with(0)
 
 
 def test_pushes_one_item_of_model_data_without_key(monkeypatch, data_class,
-                                                   serialized_first_input):
+                                                   first_value_dict_with_key):
     topic = "DUMMY_TOPIC"
     one_item_list = data_class[:1]
 
@@ -161,5 +176,5 @@ def test_pushes_one_item_of_model_data_without_key(monkeypatch, data_class,
     writer.write(one_item_list)
 
     producer.produce.assert_called_with(
-        topic=topic, key=None, value=serialized_first_input, on_delivery=ANY)
+        topic=topic, key=None, value=first_value_dict_with_key, on_delivery=ANY)
     producer.poll.assert_called_with(0)

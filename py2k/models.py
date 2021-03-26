@@ -82,7 +82,8 @@ class KafkaModel(BaseModel):
         return list(itertools.islice(iterator, 1))[0].schema_json()
 
     def value_to_avro_dict(self):
-        return json.loads(self.json())
+        key_fields = set(self.key_fields) if self.key_fields else {}
+        return json.loads(self.json(exclude=key_fields))
 
     def key_to_avro_dict(self):
         if not self.key_fields:
