@@ -31,8 +31,8 @@ class KafkaSerializer:
 
     def value_serializer(self):
         return AvroSerializer(
-            self._record.schema_json(),
-            self._schema_registry_client,
+            schema_str=self._record.schema_json(),
+            schema_registry_client=self._schema_registry_client,
         )
 
     def key_serializer(self):
@@ -56,6 +56,6 @@ class KafkaSerializer:
 
     def _find_key_fields(self, fields: List[Dict[str, Any]]) -> Dict[str, Any]:
         def is_key(field):
-            return any(v == self._key_fields for _, v in field.items())
+            return field.get('name') in self._key_fields
 
         return [field for field in fields if is_key(field)]
