@@ -120,7 +120,7 @@ def serializer_with_key(monkeypatch, schema_registry_config):
     monkeypatch.setattr(py2k.serializer, 'AvroSerializer', ParamMock)
 
     class ModelResult(KafkaRecord):
-        __key_fields__ = ['Key']
+        __key_fields__ = {'Key'}
         Field: str
         Key: str
 
@@ -135,7 +135,7 @@ def serializer_with_multiple_key(monkeypatch, schema_registry_config):
     monkeypatch.setattr(py2k.serializer, 'AvroSerializer', ParamMock)
 
     class ModelResult(KafkaRecord):
-        __key_fields__ = ['Key1', 'Key2']
+        __key_fields__ = {'Key1', 'Key2'}
         Field: str
         Key1: str
         Key2: str
@@ -155,7 +155,7 @@ def serializer_key_included(monkeypatch, schema_registry_config):
     monkeypatch.setattr(py2k.serializer, 'AvroSerializer', ParamMock)
 
     class ModelResult(KafkaRecord):
-        __key_fields__ = ['Key1', 'Key2']
+        __key_fields__ = {'Key1', 'Key2'}
         __key_included__ = True
         Field: str
         Key1: str

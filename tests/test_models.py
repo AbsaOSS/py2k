@@ -55,29 +55,29 @@ def test_user_defines_model_without_key():
         'value_2': [1, 2]
     })
     record = MyRecord.from_pandas(df)[0]
-    assert record.key_fields is None
+    assert record.key_fields == {}
 
 
 def test_user_defines_model_with_one_key(pandas_data):
     class MyRecord(KafkaRecord):
         value_1: str
         key_field: str
-        __key_fields__ = ['key_field']
+        __key_fields__ = {'key_field'}
 
     record = MyRecord.from_pandas(pandas_data)[0]
-    assert record.key_fields == ['key_field']
+    assert record.key_fields == {'key_field'}
 
 
 def test_dynamic_defines_key_fields(pandas_data):
     model = PandasToKafkaTransformer(pandas_data, "MyRecord",
-                                     key_fields=['key_field'])
+                                     key_fields={'key_field'})
     record = model.from_pandas(pandas_data)[0]
-    assert record.key_fields == ['key_field']
+    assert record.key_fields == {'key_field'}
 
 
 def test_dynamic_defines_key_included(pandas_data):
     model = PandasToKafkaTransformer(pandas_data, "MyRecord",
-                                     key_fields=['key_field'],
+                                     key_fields={'key_field'},
                                      key_included=True)
     record = model.from_pandas(pandas_data)[0]
     assert record.key_included
@@ -85,7 +85,7 @@ def test_dynamic_defines_key_included(pandas_data):
 
 def test_dynamic_key_included_false_as_default(pandas_data):
     model = PandasToKafkaTransformer(pandas_data, "MyRecord",
-                                     key_fields=['key_field'])
+                                     key_fields={'key_field'})
     record = model.from_pandas(pandas_data)[0]
     assert not record.key_included
 

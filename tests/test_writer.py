@@ -84,7 +84,7 @@ def data_class(raw_input):
 @pytest.fixture
 def data_class_with_key(raw_input):
     class ModelResult(KafkaRecord):
-        __key_fields__ = ['Customerkey']
+        __key_fields__ = {'Customerkey'}
         Customerkey: str
         Predictedvalue: float
         Timesince: Optional[int]

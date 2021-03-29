@@ -17,7 +17,7 @@ import itertools
 import json
 import warnings
 from copy import deepcopy
-from typing import Any, Dict, List, Type
+from typing import Any, Dict, List, Type, Set
 
 import pandas as pd
 from pydantic import BaseModel
@@ -36,8 +36,8 @@ class IterableAdapter:
 
 
 class KafkaRecord(BaseModel):
-    __key_fields__ = None
-    __key_included__ = False
+    __key_fields__: set = {}
+    __key_included__: bool = False
 
     @classmethod
     def from_pandas(cls, df: pd.DataFrame) -> List['KafkaRecord']:
@@ -104,10 +104,10 @@ class KafkaRecord(BaseModel):
     @property
     def value_fields(self):
         if self.key_fields and not self.key_included:
-            dict_without_key = self.dict(exclude=set(self.key_fields))
+            dict_without_key = self.dict(exclude=self.key_fields)
             return list(dict_without_key.keys())
 
-        return [name for name in self.__fields__.keys()]
+        return {name for name in self.__fields__.keys()}
 
     @property
     def value_schema_string(self):
@@ -127,7 +127,7 @@ class KafkaRecord(BaseModel):
         return self._dict_to_str(schema)
 
     @staticmethod
-    def _filter_fields(fields: List[Dict[str, Any]], names: list):
+    def _filter_fields(fields: List[Dict[str, Any]], names: set):
         return [field for field in fields if field.get('name') in names]
 
     @staticmethod
@@ -144,7 +144,7 @@ class PandasToKafkaTransformer:
                  fields_defaults: Dict[str, object] = None,
                  types_defaults: Dict[object, object] = None,
                  optional_fields: List[str] = None,
-                 key_fields: List[str] = None,
+                 key_fields: Set[str] = None,
                  key_included: bool = None):
         """
         Args:
@@ -158,8 +158,10 @@ class PandasToKafkaTransformer:
                  e.g. int. Defaults to None.
             optional_fields (List[str], optional): list of fields which should
                  be marked as optional. Defaults to None.
-            key_fields (List[str], optional): list of fields which are meant
+            key_fields (Set[str], optional): set of fields which are meant
                 to be key of the schema
+            key_included: bool: Indicator whether key fields should be
+                included in value
         """
 
         self._df = df

@@ -204,9 +204,9 @@ def test_supported_optional_types(value, _type):
 def test_specification_of_key_fields():
     df = pd.DataFrame({'column_1': [1], 'key': ['key_val']})
 
-    model = PandasToKafkaTransformer(df, 'TestModel', key_fields=['key'])
+    model = PandasToKafkaTransformer(df, 'TestModel', key_fields={'key'})
     record = model.from_pandas(df)[0]
-    assert record.key_fields == ['key']
+    assert record.key_fields == {'key'}
 
 
 def _assert_records(records, test_data):
