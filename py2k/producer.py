@@ -20,24 +20,21 @@ class KafkaProducer:
     def __init__(self, topic, producer_config):
         self._topic = topic
         self._producer = SerializingProducer(producer_config.dict)
-        self._serializer = producer_config.serializer
 
-    def produce(self, item):
+    def produce(self, record):
         while True:
             try:
-                key, value = self._serializer.serialize(item)
-
                 self._producer.produce(
                     topic=self._topic,
-                    key=key,
-                    value=value,
+                    key=record.key_to_avro_dict(),
+                    value=record.value_to_avro_dict(),
                     on_delivery=self._delivery_report
                 )
                 self._producer.poll(0)
                 break
             except BufferError as e:
                 print(
-                    f'Failed to send on attempt {item}. '
+                    f'Failed to send on attempt {record}. '
                     f'Error received {str(e)}')
                 self._producer.poll(1)
 

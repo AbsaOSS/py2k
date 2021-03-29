@@ -22,7 +22,7 @@ import pytest
 import py2k.producer_config
 import py2k.producer
 import py2k.serializer
-from py2k.models import KafkaModel
+from py2k.record import KafkaRecord
 from py2k.writer import KafkaWriter
 
 
@@ -43,7 +43,7 @@ def raw_input():
 
 
 @pytest.fixture
-def serialized_first_input():
+def first_value_dict_with_key():
     return {
         'Customerkey': 'Adam',
         'Predictedvalue': 123.22,
@@ -54,8 +54,37 @@ def serialized_first_input():
 
 
 @pytest.fixture
+def first_value_dict_without_key():
+    return {
+        'Predictedvalue': 123.22,
+        'Timesince': 4,
+        'Applicableto': '2020-07',
+        'Generationdate': '2020-03-20'
+    }
+
+
+@pytest.fixture
+def first_key_dict():
+    return {'Customerkey': 'Adam'}
+
+
+@pytest.fixture
 def data_class(raw_input):
-    class ModelResult(KafkaModel):
+    class ModelResult(KafkaRecord):
+        Customerkey: str
+        Predictedvalue: float
+        Timesince: Optional[int]
+        Applicableto: str
+        Generationdate: datetime.date
+
+    output = [ModelResult(**value) for value in raw_input]
+    return output
+
+
+@pytest.fixture
+def data_class_with_key(raw_input):
+    class ModelResult(KafkaRecord):
+        __key_fields__ = {'Customerkey'}
         Customerkey: str
         Predictedvalue: float
         Timesince: Optional[int]
@@ -69,6 +98,19 @@ def data_class(raw_input):
 @pytest.fixture
 def pandas_dataframe(raw_input):
     return pd.DataFrame(raw_input)
+
+
+@pytest.fixture
+def producer(monkeypatch):
+    producer_class = MagicMock()
+    producer = MagicMock()
+    producer_class.return_value = producer
+
+    monkeypatch.setattr(py2k.producer, 'SerializingProducer', producer_class)
+    monkeypatch.setattr(py2k.serializer,
+                        'SchemaRegistryClient', MagicMock())
+
+    return producer
 
 
 def test_kafka_model(data_class):
@@ -92,7 +134,7 @@ def test_content(data_class):
 
 
 def test_pandas_serializer(pandas_dataframe, data_class):
-    class ModelResult(KafkaModel):
+    class ModelResult(KafkaRecord):
         Customerkey: str
         Predictedvalue: float
         Timesince: int
@@ -104,48 +146,36 @@ def test_pandas_serializer(pandas_dataframe, data_class):
     assert actual == expected
 
 
-def test_pushes_one_item_of_model_data(monkeypatch, data_class,
-                                       serialized_first_input):
+def test_pushes_one_record(producer,
+                           data_class_with_key,
+                           first_value_dict_without_key,
+                           first_key_dict):
     topic = "DUMMY_TOPIC"
-    key = "Customerkey"
 
-    one_item_list = data_class[:1]
+    records = data_class_with_key[:1]
 
-    producer_class = MagicMock()
-    producer = MagicMock()
-    producer_class.return_value = producer
+    writer = KafkaWriter(topic, {}, {})
+    writer.write(records)
 
-    monkeypatch.setattr(py2k.producer, 'SerializingProducer', producer_class)
-    monkeypatch.setattr(py2k.serializer,
-                        'SchemaRegistryClient', MagicMock())
-
-    writer = KafkaWriter(topic, {}, {}, key)
-    writer.write(one_item_list)
-
-    expected_key = {key: serialized_first_input[key]}
+    expected_key = first_key_dict
 
     producer.produce.assert_called_with(
-        topic=topic, key=expected_key, value=serialized_first_input,
+        topic=topic, key=expected_key, value=first_value_dict_without_key,
         on_delivery=ANY)
     producer.poll.assert_called_with(0)
 
 
-def test_pushes_one_item_of_model_data_without_key(monkeypatch, data_class,
-                                                   serialized_first_input):
+def test_pushes_one_record_without_key(producer,
+                                       data_class,
+                                       first_value_dict_with_key):
     topic = "DUMMY_TOPIC"
-    one_item_list = data_class[:1]
-
-    producer_class = MagicMock()
-    producer = MagicMock()
-    producer_class.return_value = producer
-
-    monkeypatch.setattr(py2k.producer, 'SerializingProducer', producer_class)
-    monkeypatch.setattr(py2k.serializer,
-                        'SchemaRegistryClient', MagicMock())
+    records = data_class[:1]
 
     writer = KafkaWriter(topic, {}, {})
-    writer.write(one_item_list)
+    writer.write(records)
 
-    producer.produce.assert_called_with(
-        topic=topic, key=None, value=serialized_first_input, on_delivery=ANY)
+    producer.produce.assert_called_with(topic=topic,
+                                        key=None,
+                                        value=first_value_dict_with_key,
+                                        on_delivery=ANY)
     producer.poll.assert_called_with(0)

@@ -16,7 +16,7 @@ from typing import Any, Dict, List
 
 from tqdm import tqdm
 
-from py2k.models import KafkaModel
+from py2k.record import KafkaRecord
 from py2k.producer_config import ProducerConfig
 from py2k.producer import KafkaProducer
 from py2k.serializer import KafkaSerializer
@@ -26,8 +26,7 @@ class KafkaWriter(object):
     def __init__(self,
                  topic: str,
                  schema_registry_config: Dict[str, Any],
-                 producer_config: Dict[str, Any],
-                 key: str = None):
+                 producer_config: Dict[str, Any]):
         """A class for easy writing of data to kafka
 
         Args:
@@ -36,31 +35,27 @@ class KafkaWriter(object):
                 with the `confluent_kafka.schema_registry.SchemaRegistryClient`
             producer_config (Dict[str, Any]): a dictionary compatible with the
                 `confluent_kafka.SerializingProducer`
-            key (str, optional): [description]. Defaults to None.
         """
 
         self._topic = topic
         self._producer_config = producer_config
-        self._key = key
         self._schema_registry_config = schema_registry_config
         self._producer = None
 
-    def _create_producer(self, data: List[KafkaModel]):
-        serializer = KafkaSerializer(data[0], self._key,
-                                     self._schema_registry_config)
-
+    def _create_producer(self, data: List[KafkaRecord]):
+        serializer = KafkaSerializer(data[0], self._schema_registry_config)
         producer_config = ProducerConfig(self._producer_config, serializer)
 
         self._producer = KafkaProducer(self._topic, producer_config)
 
-    def write(self, data: List[KafkaModel]):
+    def write(self, records: List[KafkaRecord]):
         """writes data to Kafka
 
         Args:
-            data (List[KafkaModel]): Serialized `KafkaModel` objects
+            records (List[KafkaRecord]): Serialized `KafkaModel` objects
         """
-        self._create_producer(data)
-        for item in tqdm(data):
-            self._producer.produce(item)
+        self._create_producer(records)
+        for record in tqdm(records):
+            self._producer.produce(record)
 
         self._producer.flush()

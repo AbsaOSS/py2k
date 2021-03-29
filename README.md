@@ -21,11 +21,11 @@ Please see the [Contribution Guide](.github/CONTRIBUTING.md) for more informatio
 ### Minimal Example
 
 ```python
-from py2k.models import DynamicKafkaModel
+from py2k.record import PandasToRecordsTransformer
 from py2k.writer import KafkaWriter
 
 # assuming we have a pandas DataFrame, df
-serialized_df = DynamicKafkaModel(df=df,model_name='test_model').from_pandas()
+records = PandasToRecordsTransformer(df=df, record_name='test_model').from_pandas()
 
 writer = KafkaWriter(
     topic="topic_name",
@@ -33,7 +33,7 @@ writer = KafkaWriter(
     producer_config=producer_config
 )
 
-writer.write(serialized_df)
+writer.write(records)
 ```
 
 ## Features

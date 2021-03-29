@@ -14,8 +14,10 @@
 
 import datetime
 import itertools
+import json
 import warnings
-from typing import Any, Dict, List, Type
+from copy import deepcopy
+from typing import Any, Dict, List, Type, Set
 
 import pandas as pd
 from pydantic import BaseModel
@@ -33,10 +35,12 @@ class IterableAdapter:
         return self.iterator_factory()
 
 
-class KafkaModel(BaseModel):
+class KafkaRecord(BaseModel):
+    __key_fields__: set = {}
+    __include_key__: bool = False
 
     @classmethod
-    def from_pandas(cls, df: pd.DataFrame) -> List['KafkaModel']:
+    def from_pandas(cls, df: pd.DataFrame) -> List['KafkaRecord']:
         records = df.to_dict('records')
 
         if records:
@@ -49,8 +53,8 @@ class KafkaModel(BaseModel):
     @classmethod
     def iter_from_pandas(cls, df: pd.DataFrame):
         def iter_pandas(cls, df: pd.DataFrame):
-            for item in df.to_dict('records'):
-                yield cls(**item)
+            for record in df.to_dict('records'):
+                yield cls(**record)
         return IterableAdapter(lambda: iter_pandas(cls, df))
 
     class Config:
@@ -61,7 +65,7 @@ class KafkaModel(BaseModel):
 
         @staticmethod
         def schema_extra(schema: Dict[str, Any],
-                         model: Type['KafkaModel']) -> None:
+                         model: Type['KafkaRecord']) -> None:
             schema['type'] = 'record'
             schema['name'] = schema.pop('title')
             schema['namespace'] = (f'python.kafka.'
@@ -79,20 +83,74 @@ class KafkaModel(BaseModel):
     def schema_from_iter(iterator: IterableAdapter):
         return list(itertools.islice(iterator, 1))[0].schema_json()
 
+    def value_to_avro_dict(self):
+        return self._to_avro_dict(exclude=self.key_fields)
 
-class DynamicKafkaModel:
+    def key_to_avro_dict(self):
+        if not self.key_fields:
+            return None
+
+        return self._to_avro_dict(include=self.key_fields)
+
+    def _to_avro_dict(self, exclude=None, include=None):
+        return json.loads(self.json(include=include, exclude=exclude))
+
+    @property
+    def key_fields(self):
+        return self.__key_fields__
+
+    @property
+    def include_key(self):
+        return self.__include_key__
+
+    @property
+    def value_fields(self):
+        exclude = None
+        if self.key_fields and not self.include_key:
+            exclude = self.key_fields
+        _dict = self.dict(exclude=exclude)
+        return set(_dict.keys())
+
+    @property
+    def value_schema_string(self):
+        schema = deepcopy(self.schema())
+        schema['fields'] = self._filter_fields(schema['fields'],
+                                               self.value_fields)
+        return self._dict_to_str(schema)
+
+    @property
+    def key_schema_string(self):
+        schema = deepcopy(self.schema())
+
+        schema['name'] = f'{schema["name"]}Key'
+        schema['fields'] = self._filter_fields(schema['fields'],
+                                               self.key_fields)
+        return self._dict_to_str(schema)
+
+    @staticmethod
+    def _filter_fields(fields: List[Dict[str, Any]], names: set):
+        return [field for field in fields if field.get('name') in names]
+
+    @staticmethod
+    def _dict_to_str(dictionary):
+        return str(dictionary).replace("'", "\"")
+
+
+class PandasToRecordsTransformer:
     """ class model for automatic serialization of Pandas DataFrame to
     KafkaModel
     """
 
-    def __init__(self, df: pd.DataFrame, model_name: str,
+    def __init__(self, df: pd.DataFrame, record_name: str,
                  fields_defaults: Dict[str, object] = None,
                  types_defaults: Dict[object, object] = None,
-                 optional_fields: List[str] = None):
+                 optional_fields: List[str] = None,
+                 key_fields: Set[str] = None,
+                 include_key: bool = None):
         """
         Args:
             df (pd.DataFrame): Pandas dataframe to serialize
-            model_name (str): destination Pydantic model
+            record_name (str): destination Pydantic model
             fields_defaults (Dict[str, object], optional): default values for
                  fields in the dataframe. The keys are the fields names.
                  Defaults to None.
@@ -101,16 +159,22 @@ class DynamicKafkaModel:
                  e.g. int. Defaults to None.
             optional_fields (List[str], optional): list of fields which should
                  be marked as optional. Defaults to None.
+            key_fields (Set[str], optional): set of fields which are meant
+                to be key of the schema
+            include_key: bool: Indicator whether key fields should be
+                included in value
         """
-        self._df = df
 
-        model_creator = PandasModelCreator(df, model_name, fields_defaults,
+        self._df = df
+        _class = self._class(key_fields, include_key)
+
+        model_creator = PandasModelCreator(df, record_name, fields_defaults,
                                            types_defaults, optional_fields,
-                                           KafkaModel)
+                                           _class)
 
         self._model = model_creator.create()
 
-    def from_pandas(self, df: pd.DataFrame = None) -> List['KafkaModel']:
+    def from_pandas(self, df: pd.DataFrame = None) -> List['KafkaRecord']:
         """create list of KafkaModel objects from a pandas DataFrame
 
         Args:
@@ -123,3 +187,13 @@ class DynamicKafkaModel:
             return self._model.from_pandas(df)
 
         return self._model.from_pandas(self._df)
+
+    @staticmethod
+    def _class(key_fields, include_key):
+        class NewRecord(KafkaRecord):
+            if include_key is not None:
+                __include_key__ = include_key
+            if key_fields is not None:
+                __key_fields__ = key_fields
+
+        return NewRecord

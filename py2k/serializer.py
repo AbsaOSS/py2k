@@ -13,58 +13,31 @@
 # limitations under the License.
 
 
-import json
-from typing import List, Dict, Any
-
 from confluent_kafka.schema_registry import SchemaRegistryClient
 from confluent_kafka.schema_registry.avro import AvroSerializer
 
-from py2k.models import KafkaModel
+from py2k.record import KafkaRecord
 
 
 class KafkaSerializer:
-    def __init__(self, item: KafkaModel, key, schema_registry_config: dict):
-        self._item = item
-        self._key = key
+    def __init__(self, record: KafkaRecord, schema_registry_config: dict):
+        self._record = record
+        self._key_fields = record.key_fields
+        self._key_included = record.include_key
         self._schema_registry_client = SchemaRegistryClient(
             schema_registry_config)
 
     def value_serializer(self):
         return AvroSerializer(
-            self._item.schema_json(),
-            self._schema_registry_client
+            schema_str=self._record.value_schema_string,
+            schema_registry_client=self._schema_registry_client,
         )
 
     def key_serializer(self):
-        if not self._key:
+        if not self._key_fields:
             return None
 
         return AvroSerializer(
-            schema_str=self._key_schema_string,
+            schema_str=self._record.key_schema_string,
             schema_registry_client=self._schema_registry_client
         )
-
-    def serialize(self, item):
-        key = self._serialize_item(item, {self._key}) if self._key else None
-        value = self._serialize_item(item)
-        return key, value
-
-    @staticmethod
-    def _serialize_item(item, include=None):
-        return json.loads(item.json(include=include))
-
-    @property
-    def _key_schema_string(self):
-        key_schema = {}
-        _value_schema = json.loads(self._item.schema_json())
-        key_schema['type'] = _value_schema['type']
-        key_schema['name'] = f'{_value_schema["name"]}Key'
-        key_schema['namespace'] = _value_schema['namespace']
-        key_schema['fields'] = self._find_key_fields(_value_schema['fields'])
-        return str(key_schema).replace("'", "\"")
-
-    def _find_key_fields(self, fields: List[Dict[str, Any]]) -> Dict[str, Any]:
-        def is_key(field):
-            return any(v == self._key for _, v in field.items())
-
-        return [field for field in fields if is_key(field)]
