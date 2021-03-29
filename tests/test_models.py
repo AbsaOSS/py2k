@@ -18,7 +18,7 @@ from pandas._testing import assert_frame_equal
 import pytest
 
 import py2k.models
-from py2k.models import KafkaRecord, PandasToKafkaTransformer
+from py2k.models import KafkaRecord, PandasToRecordsTransformer
 
 
 def test_dynamic_model_creates_pandas_model_creator(model_creator_class):
@@ -28,7 +28,7 @@ def test_dynamic_model_creates_pandas_model_creator(model_creator_class):
     optional_fields = ['field4']
 
     params = ANY, model_name, fields_defaults, types_defaults, optional_fields
-    PandasToKafkaTransformer(*params)
+    PandasToRecordsTransformer(*params)
 
     params_to_call = *params, KafkaRecord
     model_creator_class.assert_called_with(*params_to_call)
@@ -38,7 +38,7 @@ def test_dynamic_model_creates_creator_from_dataframe(model_creator_class):
     df = pd.DataFrame({'a': [1, 2], 'b': ["bla", "alb"]})
 
     params = df, ANY, ANY, ANY, ANY
-    PandasToKafkaTransformer(*params)
+    PandasToRecordsTransformer(*params)
 
     params_to_call = *params, KafkaRecord
     called_df, *_ = called_args(model_creator_class, len(params_to_call))
@@ -69,23 +69,23 @@ def test_user_defines_model_with_one_key(pandas_data):
 
 
 def test_dynamic_defines_key_fields(pandas_data):
-    model = PandasToKafkaTransformer(pandas_data, "MyRecord",
-                                     key_fields={'key_field'})
+    model = PandasToRecordsTransformer(pandas_data, "MyRecord",
+                                       key_fields={'key_field'})
     record = model.from_pandas(pandas_data)[0]
     assert record.key_fields == {'key_field'}
 
 
 def test_dynamic_defines_key_included(pandas_data):
-    model = PandasToKafkaTransformer(pandas_data, "MyRecord",
-                                     key_fields={'key_field'},
-                                     key_included=True)
+    model = PandasToRecordsTransformer(pandas_data, "MyRecord",
+                                       key_fields={'key_field'},
+                                       include_key=True)
     record = model.from_pandas(pandas_data)[0]
     assert record.key_included
 
 
 def test_dynamic_key_included_false_as_default(pandas_data):
-    model = PandasToKafkaTransformer(pandas_data, "MyRecord",
-                                     key_fields={'key_field'})
+    model = PandasToRecordsTransformer(pandas_data, "MyRecord",
+                                       key_fields={'key_field'})
     record = model.from_pandas(pandas_data)[0]
     assert not record.key_included
 

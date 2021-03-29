@@ -37,7 +37,7 @@ class IterableAdapter:
 
 class KafkaRecord(BaseModel):
     __key_fields__: set = {}
-    __key_included__: bool = False
+    __include_key__: bool = False
 
     @classmethod
     def from_pandas(cls, df: pd.DataFrame) -> List['KafkaRecord']:
@@ -99,7 +99,7 @@ class KafkaRecord(BaseModel):
 
     @property
     def key_included(self):
-        return self.__key_included__
+        return self.__include_key__
 
     @property
     def value_fields(self):
@@ -135,7 +135,7 @@ class KafkaRecord(BaseModel):
         return str(dictionary).replace("'", "\"")
 
 
-class PandasToKafkaTransformer:
+class PandasToRecordsTransformer:
     """ class model for automatic serialization of Pandas DataFrame to
     KafkaModel
     """
@@ -145,7 +145,7 @@ class PandasToKafkaTransformer:
                  types_defaults: Dict[object, object] = None,
                  optional_fields: List[str] = None,
                  key_fields: Set[str] = None,
-                 key_included: bool = None):
+                 include_key: bool = None):
         """
         Args:
             df (pd.DataFrame): Pandas dataframe to serialize
@@ -160,12 +160,12 @@ class PandasToKafkaTransformer:
                  be marked as optional. Defaults to None.
             key_fields (Set[str], optional): set of fields which are meant
                 to be key of the schema
-            key_included: bool: Indicator whether key fields should be
+            include_key: bool: Indicator whether key fields should be
                 included in value
         """
 
         self._df = df
-        _class = self._class(key_fields, key_included)
+        _class = self._class(key_fields, include_key)
 
         model_creator = PandasModelCreator(df, record_name, fields_defaults,
                                            types_defaults, optional_fields,
@@ -191,7 +191,7 @@ class PandasToKafkaTransformer:
     def _class(key_fields, key_included):
         if key_included and key_fields:
             class WithIncluded(KafkaRecord):
-                __key_included__ = key_included
+                __include_key__ = key_included
                 __key_fields__ = key_fields
 
             return WithIncluded

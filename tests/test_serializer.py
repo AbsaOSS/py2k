@@ -156,7 +156,7 @@ def serializer_key_included(monkeypatch, schema_registry_config):
 
     class ModelResult(KafkaRecord):
         __key_fields__ = {'Key1', 'Key2'}
-        __key_included__ = True
+        __include_key__ = True
         Field: str
         Key1: str
         Key2: str

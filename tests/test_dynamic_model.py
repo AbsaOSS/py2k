@@ -23,7 +23,7 @@ import pytest
 from pydantic import BaseModel
 
 from py2k.creators import PandasModelCreator
-from py2k.models import PandasToKafkaTransformer, KafkaRecord
+from py2k.models import PandasToRecordsTransformer, KafkaRecord
 
 
 class _TestData(BaseModel):
@@ -65,7 +65,7 @@ def test_return_empty_if_df_empty(test_df):
     with pytest.warns(UserWarning) as record:
         empty_df = test_df.head(0)
 
-        model = PandasToKafkaTransformer(test_df, 'TestModel')
+        model = PandasToRecordsTransformer(test_df, 'TestModel')
         created_df = model.from_pandas(empty_df)
         assert len(created_df) == 0
 
@@ -75,19 +75,19 @@ def test_return_empty_if_df_empty(test_df):
 
 
 def test_dynamically_convert_from_pandas(test_data, test_df):
-    model = PandasToKafkaTransformer(test_df, 'TestModel')
+    model = PandasToRecordsTransformer(test_df, 'TestModel')
     records = model.from_pandas(test_df)
     _assert_records(records, test_data)
 
 
 def test_convert_from_constructed_dataframe_by_default(test_data, test_df):
-    model = PandasToKafkaTransformer(test_df, 'TestModel')
+    model = PandasToRecordsTransformer(test_df, 'TestModel')
     records = model.from_pandas()
     _assert_records(records, test_data)
 
 
 def test_fields_names_and_titles_are_the_same(test_df):
-    model = PandasToKafkaTransformer(test_df, 'TestModel')
+    model = PandasToRecordsTransformer(test_df, 'TestModel')
     records = model.from_pandas(test_df)
 
     for name, definition in records[0].__fields__.items():
@@ -95,7 +95,7 @@ def test_fields_names_and_titles_are_the_same(test_df):
 
 
 def test_use_default_defaults_if_none_informed(test_df):
-    model = PandasToKafkaTransformer(test_df, 'TestModel')
+    model = PandasToRecordsTransformer(test_df, 'TestModel')
     records = model.from_pandas(test_df)
 
     # expected defaults by field
@@ -110,8 +110,8 @@ def test_all_defaults_from_field_name(test_df):
     expected = {"name": "default name", "id": 8,
                 "value": 8.8, "decimal_val": 8.8, "bool_val": True}
 
-    model = PandasToKafkaTransformer(test_df, 'TestModel',
-                                     fields_defaults=expected)
+    model = PandasToRecordsTransformer(test_df, 'TestModel',
+                                       fields_defaults=expected)
     records = model.from_pandas(test_df)
 
     _assert_schema_defaults(records[0], expected)
@@ -121,8 +121,8 @@ def test_some_defaults_from_field_name(test_df):
     local_defaults = {"name": "default name", "value": 8.8,
                       "decimal_val": Decimal(12), "bool_val": True}
 
-    model = PandasToKafkaTransformer(test_df, 'TestModel',
-                                     fields_defaults=local_defaults)
+    model = PandasToRecordsTransformer(test_df, 'TestModel',
+                                       fields_defaults=local_defaults)
     records = model.from_pandas(test_df)
 
     expected = {**local_defaults,
@@ -134,8 +134,8 @@ def test_some_defaults_from_field_name(test_df):
 def test_all_defaults_from_field_type(test_df):
     expected = {str: "default name", int: 8, float: 8.8, bool: True}
 
-    model = PandasToKafkaTransformer(test_df, 'TestModel',
-                                     types_defaults=expected)
+    model = PandasToRecordsTransformer(test_df, 'TestModel',
+                                       types_defaults=expected)
     records = model.from_pandas(test_df)
 
     _assert_schema_defaults(records[0], expected, by_name=False)
@@ -144,8 +144,8 @@ def test_all_defaults_from_field_type(test_df):
 def test_some_defaults_from_field_type(test_df):
     local_defaults = {int: 8, float: 8.8, bool: True}
 
-    model = PandasToKafkaTransformer(test_df, 'TestModel',
-                                     types_defaults=local_defaults)
+    model = PandasToRecordsTransformer(test_df, 'TestModel',
+                                       types_defaults=local_defaults)
     records = model.from_pandas(test_df)
 
     expected = {**local_defaults,
@@ -155,8 +155,8 @@ def test_some_defaults_from_field_type(test_df):
 
 
 def test_optional_fields_specified_by_param(test_df_with_nones):
-    model = PandasToKafkaTransformer(test_df_with_nones, 'TestModel',
-                                     optional_fields=['name'])
+    model = PandasToRecordsTransformer(test_df_with_nones, 'TestModel',
+                                       optional_fields=['name'])
     records = model.from_pandas(test_df_with_nones)
 
     expected = {"name": Optional[str], "id": int}
@@ -180,7 +180,7 @@ _optional_types_test_cases = [(value, Optional[_type])
 def test_supported_types(value, _type):
     df = pd.DataFrame({'column_1': [value]})
 
-    model = PandasToKafkaTransformer(df, 'TestModel')
+    model = PandasToRecordsTransformer(df, 'TestModel')
     records = model.from_pandas(df)
 
     expected = {'column_1': _type}
@@ -192,8 +192,8 @@ def test_supported_types(value, _type):
 def test_supported_optional_types(value, _type):
     df = pd.DataFrame({'column_1': [value]})
 
-    model = PandasToKafkaTransformer(df, 'TestModel',
-                                     optional_fields=['column_1'])
+    model = PandasToRecordsTransformer(df, 'TestModel',
+                                       optional_fields=['column_1'])
     records = model.from_pandas(df)
 
     expected = {'column_1': _type}
@@ -204,7 +204,7 @@ def test_supported_optional_types(value, _type):
 def test_specification_of_key_fields():
     df = pd.DataFrame({'column_1': [1], 'key': ['key_val']})
 
-    model = PandasToKafkaTransformer(df, 'TestModel', key_fields={'key'})
+    model = PandasToRecordsTransformer(df, 'TestModel', key_fields={'key'})
     record = model.from_pandas(df)[0]
     assert record.key_fields == {'key'}
 

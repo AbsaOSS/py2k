@@ -21,11 +21,11 @@ Please see the [Contribution Guide](.github/CONTRIBUTING.md) for more informatio
 ### Minimal Example
 
 ```python
-from py2k.models import PandasToKafkaTransformer
+from py2k.models import PandasToRecordsTransformer
 from py2k.writer import KafkaWriter
 
 # assuming we have a pandas DataFrame, df
-records = PandasToKafkaTransformer(df=df, record_name='test_model').from_pandas()
+records = PandasToRecordsTransformer(df=df, record_name='test_model').from_pandas()
 
 writer = KafkaWriter(
     topic="topic_name",
