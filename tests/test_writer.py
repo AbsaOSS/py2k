@@ -22,7 +22,7 @@ import pytest
 import py2k.producer_config
 import py2k.producer
 import py2k.serializer
-from py2k.models import KafkaRecord
+from py2k.record import KafkaRecord
 from py2k.writer import KafkaWriter
 
 

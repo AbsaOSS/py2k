@@ -23,7 +23,7 @@ import pytest
 from pydantic import BaseModel
 
 from py2k.creators import PandasModelCreator
-from py2k.models import PandasToRecordsTransformer, KafkaRecord
+from py2k.record import PandasToRecordsTransformer, KafkaRecord
 
 
 class _TestData(BaseModel):

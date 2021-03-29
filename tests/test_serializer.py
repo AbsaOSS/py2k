@@ -19,7 +19,7 @@ import pandas as pd
 import pytest
 
 import py2k.serializer
-from py2k.models import KafkaRecord
+from py2k.record import KafkaRecord
 from py2k.serializer import KafkaSerializer
 
 

@@ -17,8 +17,8 @@ import pandas as pd
 from pandas._testing import assert_frame_equal
 import pytest
 
-import py2k.models
-from py2k.models import KafkaRecord, PandasToRecordsTransformer
+import py2k.record
+from py2k.record import KafkaRecord, PandasToRecordsTransformer
 
 
 def test_dynamic_model_creates_pandas_model_creator(model_creator_class):
@@ -30,7 +30,7 @@ def test_dynamic_model_creates_pandas_model_creator(model_creator_class):
     params = ANY, model_name, fields_defaults, types_defaults, optional_fields
     PandasToRecordsTransformer(*params)
 
-    params_to_call = *params, KafkaRecord
+    params_to_call = *params, ANY
     model_creator_class.assert_called_with(*params_to_call)
 
 
@@ -80,14 +80,14 @@ def test_dynamic_defines_key_included(pandas_data):
                                        key_fields={'key_field'},
                                        include_key=True)
     record = model.from_pandas(pandas_data)[0]
-    assert record.key_included
+    assert record.include_key
 
 
 def test_dynamic_key_included_false_as_default(pandas_data):
     model = PandasToRecordsTransformer(pandas_data, "MyRecord",
                                        key_fields={'key_field'})
     record = model.from_pandas(pandas_data)[0]
-    assert not record.key_included
+    assert not record.include_key
 
 
 @pytest.fixture
@@ -107,7 +107,7 @@ def model_creator():
 def model_creator_class(monkeypatch, model_creator):
     model_creator_class = MagicMock()
     model_creator_class.return_value = model_creator
-    monkeypatch.setattr(py2k.models,
+    monkeypatch.setattr(py2k.record,
                         'PandasModelCreator', model_creator_class)
     return model_creator_class
 

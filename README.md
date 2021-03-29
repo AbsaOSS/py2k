@@ -21,7 +21,7 @@ Please see the [Contribution Guide](.github/CONTRIBUTING.md) for more informatio
 ### Minimal Example
 
 ```python
-from py2k.models import PandasToRecordsTransformer
+from py2k.record import PandasToRecordsTransformer
 from py2k.writer import KafkaWriter
 
 # assuming we have a pandas DataFrame, df

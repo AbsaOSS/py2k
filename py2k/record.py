@@ -84,37 +84,38 @@ class KafkaRecord(BaseModel):
         return list(itertools.islice(iterator, 1))[0].schema_json()
 
     def value_to_avro_dict(self):
-        key_fields = set(self.key_fields) if self.key_fields else {}
-        return json.loads(self.json(exclude=key_fields))
+        return self._to_avro_dict(exclude=self.key_fields)
 
     def key_to_avro_dict(self):
         if not self.key_fields:
             return None
 
-        return json.loads(self.json(include=set(self.key_fields)))
+        return self._to_avro_dict(include=self.key_fields)
+
+    def _to_avro_dict(self, exclude=None, include=None):
+        return json.loads(self.json(include=include, exclude=exclude))
 
     @property
     def key_fields(self):
         return self.__key_fields__
 
     @property
-    def key_included(self):
+    def include_key(self):
         return self.__include_key__
 
     @property
     def value_fields(self):
-        if self.key_fields and not self.key_included:
-            dict_without_key = self.dict(exclude=self.key_fields)
-            return list(dict_without_key.keys())
-
-        return {name for name in self.__fields__.keys()}
+        exclude = None
+        if self.key_fields and not self.include_key:
+            exclude = self.key_fields
+        _dict = self.dict(exclude=exclude)
+        return set(_dict.keys())
 
     @property
     def value_schema_string(self):
         schema = deepcopy(self.schema())
-        if self.key_fields and not self.key_included:
-            schema['fields'] = self._filter_fields(schema['fields'],
-                                                   self.value_fields)
+        schema['fields'] = self._filter_fields(schema['fields'],
+                                               self.value_fields)
         return self._dict_to_str(schema)
 
     @property
@@ -188,18 +189,11 @@ class PandasToRecordsTransformer:
         return self._model.from_pandas(self._df)
 
     @staticmethod
-    def _class(key_fields, key_included):
-        if key_included and key_fields:
-            class WithIncluded(KafkaRecord):
-                __include_key__ = key_included
+    def _class(key_fields, include_key):
+        class NewRecord(KafkaRecord):
+            if include_key is not None:
+                __include_key__ = include_key
+            if key_fields is not None:
                 __key_fields__ = key_fields
 
-            return WithIncluded
-
-        elif key_fields:
-            class WithKey(KafkaRecord):
-                __key_fields__ = key_fields
-
-            return WithKey
-
-        return KafkaRecord
+        return NewRecord

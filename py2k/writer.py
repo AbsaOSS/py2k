@@ -16,7 +16,7 @@ from typing import Any, Dict, List
 
 from tqdm import tqdm
 
-from py2k.models import KafkaRecord
+from py2k.record import KafkaRecord
 from py2k.producer_config import ProducerConfig
 from py2k.producer import KafkaProducer
 from py2k.serializer import KafkaSerializer

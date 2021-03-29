@@ -19,7 +19,7 @@ import pandas as pd
 import pytest
 
 from py2k.creators import PandasModelCreator
-from py2k.models import KafkaRecord
+from py2k.record import KafkaRecord
 
 
 @pytest.mark.parametrize(
