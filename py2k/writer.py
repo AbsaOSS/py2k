@@ -16,7 +16,7 @@ from typing import Any, Dict, List
 
 from tqdm import tqdm
 
-from py2k.models import KafkaModel
+from py2k.models import KafkaRecord
 from py2k.producer_config import ProducerConfig
 from py2k.producer import KafkaProducer
 from py2k.serializer import KafkaSerializer
@@ -42,17 +42,17 @@ class KafkaWriter(object):
         self._schema_registry_config = schema_registry_config
         self._producer = None
 
-    def _create_producer(self, data: List[KafkaModel]):
+    def _create_producer(self, data: List[KafkaRecord]):
         serializer = KafkaSerializer(data[0], self._schema_registry_config)
         producer_config = ProducerConfig(self._producer_config, serializer)
 
         self._producer = KafkaProducer(self._topic, producer_config)
 
-    def write(self, records: List[KafkaModel]):
+    def write(self, records: List[KafkaRecord]):
         """writes data to Kafka
 
         Args:
-            records (List[KafkaModel]): Serialized `KafkaModel` objects
+            records (List[KafkaRecord]): Serialized `KafkaModel` objects
         """
         self._create_producer(records)
         for record in tqdm(records):

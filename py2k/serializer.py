@@ -16,11 +16,11 @@
 from confluent_kafka.schema_registry import SchemaRegistryClient
 from confluent_kafka.schema_registry.avro import AvroSerializer
 
-from py2k.models import KafkaModel
+from py2k.models import KafkaRecord
 
 
 class KafkaSerializer:
-    def __init__(self, record: KafkaModel, schema_registry_config: dict):
+    def __init__(self, record: KafkaRecord, schema_registry_config: dict):
         self._record = record
         self._key_fields = record.key_fields
         self._key_included = record.key_included

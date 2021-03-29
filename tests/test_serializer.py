@@ -19,7 +19,7 @@ import pandas as pd
 import pytest
 
 import py2k.serializer
-from py2k.models import KafkaModel
+from py2k.models import KafkaRecord
 from py2k.serializer import KafkaSerializer
 
 
@@ -106,7 +106,7 @@ def test_value_serializer_with_key_when_specified(serializer_key_included):
 def serializer_without_key(monkeypatch, schema_registry_config):
     monkeypatch.setattr(py2k.serializer, 'AvroSerializer', ParamMock)
 
-    class ModelResult(KafkaModel):
+    class ModelResult(KafkaRecord):
         Field: str
 
     df = pd.DataFrame({'Field': ['field_value']})
@@ -119,7 +119,7 @@ def serializer_without_key(monkeypatch, schema_registry_config):
 def serializer_with_key(monkeypatch, schema_registry_config):
     monkeypatch.setattr(py2k.serializer, 'AvroSerializer', ParamMock)
 
-    class ModelResult(KafkaModel):
+    class ModelResult(KafkaRecord):
         __key_fields__ = ['Key']
         Field: str
         Key: str
@@ -134,7 +134,7 @@ def serializer_with_key(monkeypatch, schema_registry_config):
 def serializer_with_multiple_key(monkeypatch, schema_registry_config):
     monkeypatch.setattr(py2k.serializer, 'AvroSerializer', ParamMock)
 
-    class ModelResult(KafkaModel):
+    class ModelResult(KafkaRecord):
         __key_fields__ = ['Key1', 'Key2']
         Field: str
         Key1: str
@@ -154,7 +154,7 @@ def serializer_with_multiple_key(monkeypatch, schema_registry_config):
 def serializer_key_included(monkeypatch, schema_registry_config):
     monkeypatch.setattr(py2k.serializer, 'AvroSerializer', ParamMock)
 
-    class ModelResult(KafkaModel):
+    class ModelResult(KafkaRecord):
         __key_fields__ = ['Key1', 'Key2']
         __key_included__ = True
         Field: str

@@ -22,7 +22,7 @@ import pytest
 import py2k.producer_config
 import py2k.producer
 import py2k.serializer
-from py2k.models import KafkaModel
+from py2k.models import KafkaRecord
 from py2k.writer import KafkaWriter
 
 
@@ -70,7 +70,7 @@ def first_key_dict():
 
 @pytest.fixture
 def data_class(raw_input):
-    class ModelResult(KafkaModel):
+    class ModelResult(KafkaRecord):
         Customerkey: str
         Predictedvalue: float
         Timesince: Optional[int]
@@ -83,7 +83,7 @@ def data_class(raw_input):
 
 @pytest.fixture
 def data_class_with_key(raw_input):
-    class ModelResult(KafkaModel):
+    class ModelResult(KafkaRecord):
         __key_fields__ = ['Customerkey']
         Customerkey: str
         Predictedvalue: float
@@ -134,7 +134,7 @@ def test_content(data_class):
 
 
 def test_pandas_serializer(pandas_dataframe, data_class):
-    class ModelResult(KafkaModel):
+    class ModelResult(KafkaRecord):
         Customerkey: str
         Predictedvalue: float
         Timesince: int

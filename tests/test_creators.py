@@ -19,7 +19,7 @@ import pandas as pd
 import pytest
 
 from py2k.creators import PandasModelCreator
-from py2k.models import KafkaModel
+from py2k.models import KafkaRecord
 
 
 @pytest.mark.parametrize(
@@ -37,7 +37,7 @@ from py2k.models import KafkaModel
 def test_creates_model_with_field_of_type(expected_type, value):
     df = pd.DataFrame({'field_name': [value]})
 
-    model = PandasModelCreator(df, 'TestModel', base=KafkaModel).create()
+    model = PandasModelCreator(df, 'TestModel', base=KafkaRecord).create()
     fields = model.__fields__
     field = list(fields.values())[0]
 
@@ -49,4 +49,4 @@ def test_creates_model_with_field_of_type(expected_type, value):
 def test_throw_exception_when_creating_model_from_empty_df():
     with pytest.raises(ValueError):
         empty_df = pd.DataFrame(data=[], columns=['c1', 'c2', 'c3'])
-        PandasModelCreator(empty_df, 'TestModel', base=KafkaModel).create()
+        PandasModelCreator(empty_df, 'TestModel', base=KafkaRecord).create()
