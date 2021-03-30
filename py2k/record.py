@@ -138,7 +138,7 @@ class KafkaRecord(BaseModel):
 
 class PandasToRecordsTransformer:
     """ class model for automatic serialization of Pandas DataFrame to
-    KafkaModel
+    KafkaRecord
     """
 
     def __init__(self, df: pd.DataFrame, record_name: str,
@@ -182,6 +182,16 @@ class PandasToRecordsTransformer:
 
         Returns:
             [List[KafkaModel]]: serialized list of KafkaModel objects
+
+        Examples:
+            >>> record_transformer = PandasToRecordsTransformer(df=df,
+                                                                record_name='KafkaRecord')
+            >>> record_transformer.from_pandas()
+                [KafkaRecord(name='Daniel',
+                             cool_level='low',
+                             value=27.1,
+                             date=datetime.date(2021, 3, 1))]
+
         """
         if df is not None:
             return self._model.from_pandas(df)
