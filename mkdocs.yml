@@ -12,5 +12,8 @@ plugins:
             show_source: false
       watch:
         - py2k
-
   - search
+
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences

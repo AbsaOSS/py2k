@@ -1,4 +1,4 @@
-# Py2k
+# Welcome to Py2k
 
 A high level Python to Kafka API with Schema Registry compatibility and automatic avro schema creation.
 
@@ -9,7 +9,7 @@ A high level Python to Kafka API with Schema Registry compatibility and automati
 Py2K is currently available on PIP:
 
 ```bash
- > pip install py2k
+pip install py2k
 ```
 
 ## Contributing
@@ -35,6 +35,8 @@ writer = KafkaWriter(
 
 writer.write(records)
 ```
+
+For additional examples please see the [examples](./examples) folder
 
 ## Features
 
