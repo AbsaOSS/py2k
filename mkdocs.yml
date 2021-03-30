@@ -2,3 +2,15 @@ site_name: Py2K
 
 theme:
   name: material
+
+plugins:
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          rendering:
+            show_source: false
+      watch:
+        - py2k
+
+  - search
