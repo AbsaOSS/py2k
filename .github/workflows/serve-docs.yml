@@ -13,6 +13,6 @@ jobs:
         with:
           python-version: 3.9
       - run: pwd
-      - run: PYTHONPATH=$PYTHONPATH:$PWD
+      - run: export PYTHONPATH=$PYTHONPATH:$PWD
       - run: pip install mkdocs-material mkdocstrings markdown-include
       - run: mkdocs gh-deploy --force
