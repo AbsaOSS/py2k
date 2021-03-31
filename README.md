@@ -1,5 +1,12 @@
 # Welcome to Py2k
 
+[![Tests](https://github.com/AbsaOSS/py2k/actions/workflows/ci.yml/badge.svg)](https://github.com/AbsaOSS/py2k/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/AbsaOSS/py2k/branch/main/graph/badge.svg?token=ICP840115H)](https://codecov.io/gh/AbsaOSS/py2k)
+[![pypi](https://img.shields.io/pypi/v/py2k.svg)](https://pypi.python.org/pypi/py2k)
+[![downloads](https://img.shields.io/pypi/dm/py2k.svg)](https://pypistats.org/packages/py2k)
+[![versions](https://img.shields.io/pypi/pyversions/py2k.svg)](https://github.com/AbsaOSS/py2k)
+[![license](https://img.shields.io/github/license/AbsaOSS/py2k.svg)](https://github.com/AbsaOSS/py2k/blob/main/LICENSE)
+
 A high level Python to Kafka API with Schema Registry compatibility and automatic avro schema creation.
 
 - Free software: Apache2 license
