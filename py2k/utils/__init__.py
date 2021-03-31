@@ -27,13 +27,19 @@ def process_properties(schema: Dict[str, Any]) -> Dict[str, Any]:
     :rtype: Dict[str, Any]
     """
     fields: List[Dict[str, Any]] = []
-    for value in schema['properties'].values():
+
+    json2avro = {
+        'number': 'double',
+        'integer': 'int'
+    }
+
+    for name, value in schema['properties'].items():
         try:
-            value['name'] = value.pop('title')
-            if value['type'] == 'number':
-                value['type'] = 'double'
-            if value['type'] == 'integer':
-                value['type'] = 'int'
+            value.pop('title')
+            value['name'] = name
+
+            json_type = value['type']
+            value['type'] = json2avro.get(json_type, json_type)
         finally:
             fields.append(value)
     schema['fields'] = fields
