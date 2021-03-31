@@ -37,6 +37,9 @@ plugins:
       default_handler: python
       handlers:
         python:
+          setup_commands:
+            - import sys
+            - sys.path.append("py2k")
           rendering:
             show_source: false
       watch:
