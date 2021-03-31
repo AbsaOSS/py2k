@@ -9,7 +9,7 @@ You can contribute in many ways:
 
 ### Report Bugs
 
-Report bugs at https://github.com/AbsaOSS/py2k/issues.
+Report bugs at <https://github.com/AbsaOSS/py2k/issues>.
 
 If you are reporting a bug, please include:
 
@@ -35,7 +35,7 @@ articles, and such.
 
 ### Submit Feedback
 
-The best way to send feedback is to file an issue at https://github.com/AbsaOSS/py2k/issues.
+The best way to send feedback is to file an issue at <https://github.com/AbsaOSS/py2k/issues>.
 
 If you are proposing a feature:
 
@@ -44,7 +44,7 @@ If you are proposing a feature:
 - Remember that this is a volunteer-driven project, and that contributions
   are welcome :)
 
-## Get Started!
+## Get Started
 
 Ready to contribute? Here's how to set up `py2k` for local development.
 

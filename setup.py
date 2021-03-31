@@ -20,7 +20,7 @@ from setuptools import setup, find_packages
 with open('README.md') as readme_file:
     readme = readme_file.read()
 
-with open('HISTORY.md') as history_file:
+with open('docs/release_notes.md') as history_file:
     history = history_file.read()
 
 requirements = [
@@ -39,7 +39,7 @@ setup(
     author_email='daniel.wertheimer@absa.africa',
     python_requires='>=3.6',
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: Apache Software License',
         'Natural Language :: English',
@@ -63,6 +63,6 @@ setup(
     test_suite='tests',
     tests_require=test_requirements,
     url='https://github.com/AbsaOSS/py2k.git',
-    version='1.8.0',
+    version='1.8.1',
     zip_safe=False,
 )

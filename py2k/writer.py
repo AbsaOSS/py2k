@@ -53,6 +53,14 @@ class KafkaWriter(object):
 
         Args:
             records (List[KafkaRecord]): Serialized `KafkaModel` objects
+
+        Examples:
+            >>> from py2k.writer import KafkaWriter
+            >>> writer = KafkaWriter(topic=topic,
+                     schema_registry_config=schema_registry_config,
+                     producer_config=producer_config)
+            >>> writer.write(records)
+            100%|██████████| 4/4 [00:00<00:00,  7.69it/s]
         """
         self._create_producer(records)
         for record in tqdm(records):
