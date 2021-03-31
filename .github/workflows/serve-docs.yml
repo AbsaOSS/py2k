@@ -12,7 +12,7 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: 3.9
-      - run: echo ::add-path::$PWD
+      - run: echo "/home/runner/work/py2k/py2k" >> $GITHUB_PATH
       - run: echo "$HOME"
       - run: echo "$PWD" >> $GITHUB_PATH
       - run: echo "$GITHUB_PATH"
