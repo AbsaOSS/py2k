@@ -13,6 +13,7 @@ jobs:
         with:
           python-version: 3.9
       - run: echo "/home/runner/work/py2k/py2k" >> $GITHUB_PATH
+      - run: echo "/home/runner/work/py2k/py2k/py2k" >> $GITHUB_PATH
       - run: echo "$HOME"
       - run: echo "$PATH"
       - run: pip install mkdocs-material mkdocstrings markdown-include
