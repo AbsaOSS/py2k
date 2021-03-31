@@ -1,4 +1,11 @@
-# Welcome to Py2k
+# Welcome to Py2K
+
+[![Tests](https://github.com/AbsaOSS/py2k/actions/workflows/ci.yml/badge.svg)](https://github.com/AbsaOSS/py2k/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/AbsaOSS/py2k/branch/main/graph/badge.svg?token=ICP840115H)](https://codecov.io/gh/AbsaOSS/py2k)
+[![pypi](https://img.shields.io/pypi/v/py2k.svg)](https://pypi.python.org/pypi/py2k)
+[![downloads](https://img.shields.io/pypi/dm/py2k.svg)](https://pypistats.org/packages/py2k)
+[![versions](https://img.shields.io/pypi/pyversions/py2k.svg)](https://github.com/AbsaOSS/py2k)
+[![license](https://img.shields.io/github/license/AbsaOSS/py2k.svg)](https://github.com/AbsaOSS/py2k/blob/main/LICENSE)
 
 A high level Python to Kafka API with Schema Registry compatibility and automatic avro schema creation.
 
@@ -25,7 +32,8 @@ from py2k.record import PandasToRecordsTransformer
 from py2k.writer import KafkaWriter
 
 # assuming we have a pandas DataFrame, df
-records = PandasToRecordsTransformer(df=df, record_name='test_model').from_pandas()
+record_transformer = PandasToRecordsTransformer(df=df, record_name='test_model')
+records = record_transformer.from_pandas()
 
 writer = KafkaWriter(
     topic="topic_name",

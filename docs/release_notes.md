@@ -11,7 +11,7 @@
 - Introduce `__key_fields__` in KafkaRecord to enable specifying which fields are part of the key
 - Introduce `__include_key__` in KafkaRecord to enable specifying whether key_fields should be part of the value message
 
-Big thank you to @vesely-david for this change
+Big thank you to [@vesely-david](https://github.com/vesely-david) for this change
 
 ## 1.7.0 (2021-03-11)
 

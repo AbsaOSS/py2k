@@ -1,8 +1,37 @@
 site_name: Py2K
+site_url: https://absaoss.github.io/py2k/
 
 theme:
   name: material
+  palette:
+    - scheme: default
+      primary: pink
+      accent: deep orange
+      toggle:
+        icon: material/lightbulb-outline
+        name: Switch to light mode
+    - scheme: slate
+      primary: pink
+      accent: deep orange
+      toggle:
+        icon: material/lightbulb
+        name: Switch to dark mode
+  features:
+    - search.suggest
+    - search.highlight
+  icon:
+    repo: fontawesome/brands/github
+  language: en
+repo_name: absaoss/py2k
+repo_url: https://github.com/absaoss/py2k
 
+nav:
+  - Py2K: index.md
+  - Tutorial - User Guide:
+      - Tutorial - User Guide - Intro: tutorial/index.md
+      - First Steps: tutorial/first_steps.md
+  - API Reference: reference.md
+  - Release Notes: release_notes.md
 plugins:
   - mkdocstrings:
       default_handler: python
@@ -15,5 +44,27 @@ plugins:
   - search
 
 markdown_extensions:
-  - pymdownx.highlight
-  - pymdownx.superfences
+  - toc:
+      permalink: true
+  - markdown.extensions.codehilite:
+      guess_lang: false
+  - markdown_include.include:
+      base_path: docs
+  - admonition
+  - codehilite
+  - extra
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_div_format ""
+  - pymdownx.tabbed
+
+extra_css:
+  - css/termynal.css
+  - css/custom.css
+
+extra_javascript:
+  - https://unpkg.com/mermaid@8.4.6/dist/mermaid.min.js
+  - js/termynal.js
+  - js/custom.js
