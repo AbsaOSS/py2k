@@ -13,6 +13,6 @@ jobs:
         with:
           python-version: 3.8
       - run: pwd
-      - run: echo $PYTHONPATH
+      - run: echo "hello + $PYTHONPATH"
       - run: pip install mkdocs-material mkdocstrings markdown-include
       - run: mkdocs gh-deploy --force
