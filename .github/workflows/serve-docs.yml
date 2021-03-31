@@ -12,7 +12,8 @@ jobs:
       - uses: actions/setup-python@v2
         with:
           python-version: 3.9
-      - run: pwd
-      - run: export PYTHONPATH=$PYTHONPATH:$PWD
+      - run: echo $GITHUB_PATH
+      - run: echo "$PWD" >> $GITHUB_PATH
+      - run: echo $GITHUB_PATH
       - run: pip install mkdocs-material mkdocstrings markdown-include
       - run: mkdocs gh-deploy --force
