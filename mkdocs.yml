@@ -40,8 +40,6 @@ plugins:
           setup_commands:
             - import sys
             - sys.path.append(".")
-            - sys.path.append("../")
-            - sys.path.append("./py2k")
             
           rendering:
             show_source: false
