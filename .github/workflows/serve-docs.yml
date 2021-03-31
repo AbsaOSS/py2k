@@ -14,7 +14,7 @@ jobs:
           python-version: 3.9
       - run: echo "$PATH"
       - run: echo "$HOME"
-      - run: echo "$PWD"
+      - run: echo "$PWD" >> $GITHUB_PATH
       - run: echo "$GITHUB_PATH"
       - run: pip install mkdocs-material mkdocstrings markdown-include
       - run: mkdocs gh-deploy --force
