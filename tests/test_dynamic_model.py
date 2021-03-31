@@ -233,6 +233,12 @@ def _assert_schema_defaults(sample_record, expected, by_name=True):
             "boolean": bool
         }.get(type_name)
 
+    def python_val_to_avro(val):
+        return {
+            False: 'false',
+            True: 'true'
+        }.get(val, val)
+
     # actual records after transformed
     actual = json.loads(sample_record.schema_json())
 
@@ -245,7 +251,8 @@ def _assert_schema_defaults(sample_record, expected, by_name=True):
             expected_default = expected.get(
                 json_to_python_type(field.get("type")))
 
-        assert expected_default == actual_default
+        expected_default = python_val_to_avro(expected_default)
+        assert actual_default == expected_default
 
 
 def _assert_schema_types(sample_record, expected):

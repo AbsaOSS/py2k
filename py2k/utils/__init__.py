@@ -28,9 +28,14 @@ def process_properties(schema: Dict[str, Any]) -> Dict[str, Any]:
     """
     fields: List[Dict[str, Any]] = []
 
-    json2avro = {
+    json2avro_types = {
         'number': 'double',
         'integer': 'int'
+    }
+
+    python2avro_defaults = {
+        False: 'false',
+        True: 'true'
     }
 
     for name, value in schema['properties'].items():
@@ -39,7 +44,12 @@ def process_properties(schema: Dict[str, Any]) -> Dict[str, Any]:
             value['name'] = name
 
             json_type = value['type']
-            value['type'] = json2avro.get(json_type, json_type)
+            value['type'] = json2avro_types.get(json_type, json_type)
+
+            if value.get('default') is not None:
+                default = value['default']
+                value['default'] = python2avro_defaults.get(default, default)
+
         finally:
             fields.append(value)
     schema['fields'] = fields
