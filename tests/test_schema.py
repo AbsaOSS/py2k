@@ -22,22 +22,37 @@ def test_top_level_record_schema():
     assert schema == expected
 
 
-@pytest.mark.parametrize(
-    'python_type,avro_type',
-    [
-        (bool, 'boolean'),
-        (int, 'int'),
-        (str, 'string'),
-        (float, 'double')
-    ]
-)
+_types_to_test = [
+    (bool, 'boolean'),
+    (int, 'int'),
+    (str, 'string'),
+    (float, 'double'),
+]
+
+
+@pytest.mark.parametrize('python_type,avro_type', _types_to_test)
 def test_field_type(python_type, avro_type):
     MyRecord = create_model('MyRecord', a=(python_type, ...),
                             __base__=KafkaRecord)
-    schema = MyRecord(a=python_type(1)).schema()
+
+    record = MyRecord(a=python_type(1))
+    schema = record.schema()
     field_type = schema['fields'][0]['type']
 
     assert field_type == avro_type
+
+
+@pytest.mark.parametrize('python_type,avro_type', _types_to_test)
+def test_optional_field_type(python_type, avro_type):
+    MyRecord = create_model('MyRecord',
+                            a=(Optional[python_type], None),
+                            __base__=KafkaRecord)
+
+    record = MyRecord()
+    schema = record.schema()
+    field_type = schema['fields'][0]['type']
+
+    assert field_type == ['null', avro_type]
 
 
 @pytest.mark.parametrize(
