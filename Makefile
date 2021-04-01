@@ -72,3 +72,6 @@ dist: clean ## builds source and wheel package
 
 install: clean ## install the package to the active Python's site-packages
 	python setup.py install
+
+check-license:
+	apache-license-check --copyright "2021 ABSA Group Limited" py2k/* tests/*.py tests/utils
