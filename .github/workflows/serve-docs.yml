@@ -8,8 +8,8 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-       - name: set pythonpath
-          run: |
+      - name: set pythonpath
+        run: |
             echo "PYTHONPATH=/home/runner/work/py2k/py2k" >> $GITHUB_ENV
             echo "/home/runner/work/py2k/py2k/py2k" >> $GITHUB_PATH
       - uses: actions/checkout@v2
