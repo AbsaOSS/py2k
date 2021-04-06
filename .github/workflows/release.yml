@@ -25,7 +25,7 @@ jobs:
           if [ -f requirements_dev.txt ]; then pip install -r requirements_dev.txt; fi
       - name: Check Apache2 License
         run: |
-          apache-license-check --copyright "2021 ABSA Group Limited"
+          make check-license
       - name: Lint with flake8
         run: |
           # stop the build if there are Python syntax errors or undefined names
