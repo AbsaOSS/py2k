@@ -1,5 +1,11 @@
 # Release Notes
 
+## v1.8.2 (2021-04-06)
+
+### Bugs
+
+- Resolved boolean schema not being converted to the correct avro schema values PR [#48](https://github.com/AbsaOSS/py2k/pull/48) - [@vesely-david](https://github.com/vesely-david)
+
 ## v1.8.1 (2021-03-31)
 
 ### Docs
