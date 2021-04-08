@@ -31,6 +31,7 @@ nav:
       - Tutorial - User Guide - Intro: tutorial/index.md
       - First Steps: tutorial/first_steps.md
   - API Reference: reference.md
+  - Motivation: motivation.md
   - Release Notes: release_notes.md
 plugins:
   - mkdocstrings:
@@ -40,7 +41,7 @@ plugins:
           setup_commands:
             - import sys
             - sys.path.append("py2k")
-            
+
           rendering:
             show_source: false
       watch:
