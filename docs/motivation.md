@@ -4,7 +4,7 @@
 
 ---
 
-If you look online for examples of how to post data from Python onto Kafka with integration into the Confluent Schema Registry. There aren't many examples, and while they're well documented for general Kafka Producers, it becomes increasingly complex to implement all the components required and your codebase can easily have more logic for getting your data to Kafka than the actual project use-case.
+If you look online for examples of how to post data from pandas onto Kafka with integration into the Confluent Schema Registry, you won't find many of them. While well documented for general Kafka Producers, they become increasingly complex to implement, which can easily lead you to write more code for getting your data to Kafka than the actual project use-case.
 
 ## Remove Bloat
 
