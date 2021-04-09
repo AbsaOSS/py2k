@@ -12,7 +12,7 @@ We wanted to create a tool with **minimal overhead** that didn't bloat data scie
 
 ## Keep Data Scientists doing Data Science
 
-We wanted to **keep data scientists using tools they're comfortable with**, such as [pandas](https://pandas.pydata.org/) Dataframes so we provide an API for **automatic conversion of pandas Dataframes**. This is analogous to Absa's [ABRiS](https://github.com/AbsaOSS/ABRiS) package for Spark Dataframes which helps data engineers by providing similar functionality.
+We wanted to **keep data scientists using tools they're comfortable with**, so we provide an API for **automatic conversion of pandas Dataframes**. This is analogous to Absa's [ABRiS](https://github.com/AbsaOSS/ABRiS) package for Spark Dataframes which helps data engineers by providing similar functionality.
 
 ## Minimal Kafka, Avro, Confluent Jargon
 
