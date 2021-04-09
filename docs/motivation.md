@@ -1,6 +1,6 @@
 # Why we built Py2K
 
-**Py2K** is a tool **designed by data scientists, for data scientists**. Allowing data scientists, data engineers and developers to stay within the Python environment and avoid the jargon related to Kafka, Schema Registry,and Avro by utilising Pythonic Objects.
+**Py2K** is a library that connects pandas dataframes to Kafka and Schema Registry. It is a tool **designed by data scientists, for data scientists**. It allows data scientists, data engineers and developers to stay within the Python environment and avoid the jargon related to Kafka, Schema Registry,and Avro by utilising Pythonic Objects.
 
 ---
 
