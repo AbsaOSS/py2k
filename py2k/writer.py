@@ -48,11 +48,12 @@ class KafkaWriter(object):
 
         self._producer = KafkaProducer(self._topic, producer_config)
 
-    def write(self, records: List[KafkaRecord]):
-        """writes data to Kafka
+    def write(self, records: List[KafkaRecord], verbose: bool = False):
+        """Writes data to Kafka.
 
         Args:
             records (List[KafkaRecord]): Serialized `KafkaModel` objects
+            verbose (bool): Whether or not you want to show the loading bar
 
         Examples:
             >>> from py2k.writer import KafkaWriter
@@ -63,7 +64,7 @@ class KafkaWriter(object):
             100%|██████████| 4/4 [00:00<00:00,  7.69it/s]
         """
         self._create_producer(records)
-        for record in tqdm(records):
+        for record in (tqdm(records) if verbose else records):
             self._producer.produce(record)
 
         self._producer.flush()
