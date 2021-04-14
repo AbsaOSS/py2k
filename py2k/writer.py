@@ -49,10 +49,11 @@ class KafkaWriter(object):
         self._producer = KafkaProducer(self._topic, producer_config)
 
     def write(self, records: List[KafkaRecord], verbose: bool = False):
-        """writes data to Kafka
+        """Writes data to Kafka.
 
         Args:
             records (List[KafkaRecord]): Serialized `KafkaModel` objects
+            verbose (bool): Whether or not you want to show the loading bar
 
         Examples:
             >>> from py2k.writer import KafkaWriter
