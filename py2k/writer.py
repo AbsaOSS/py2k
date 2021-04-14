@@ -48,7 +48,7 @@ class KafkaWriter(object):
 
         self._producer = KafkaProducer(self._topic, producer_config)
 
-    def write(self, records: List[KafkaRecord]):
+    def write(self, records: List[KafkaRecord], verbose: bool = False):
         """writes data to Kafka
 
         Args:
@@ -63,7 +63,7 @@ class KafkaWriter(object):
             100%|██████████| 4/4 [00:00<00:00,  7.69it/s]
         """
         self._create_producer(records)
-        for record in tqdm(records):
+        for record in (tqdm(records) if verbose else records):
             self._producer.produce(record)
 
         self._producer.flush()
