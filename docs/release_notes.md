@@ -1,5 +1,13 @@
 # Release Notes
 
+<!-- prettier-ignore-start -->
+
+## Latest Changes
+
+
+
+<!-- prettier-ignore-end -->
+
 ## v1.8.2 (2021-04-06)
 
 ### Bugs
