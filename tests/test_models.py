@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+from collections import Iterator
 from unittest.mock import MagicMock, ANY
 
 import pandas as pd
@@ -45,7 +46,11 @@ def test_dynamic_model_creates_creator_from_dataframe(model_creator_class):
     assert_frame_equal(df, called_df)
 
 
-def test_user_defines_model_without_key():
+@pytest.mark.parametrize(
+    'method_name',
+    ['from_pandas', 'iter_from_pandas']
+)
+def test_user_defines_model_without_key(method_name):
     class MyRecord(KafkaRecord):
         value_1: str
         value_2: int
@@ -54,40 +59,97 @@ def test_user_defines_model_without_key():
         'value_1': ['a', 'b'],
         'value_2': [1, 2]
     })
-    record = MyRecord.from_pandas(df)[0]
+
+    from_pandas_method = getattr(MyRecord, method_name)
+    record = list(from_pandas_method(df))[0]
     assert record.key_fields == {}
 
 
-def test_user_defines_model_with_one_key(pandas_data):
+@pytest.mark.parametrize(
+    'method_name',
+    ['from_pandas', 'iter_from_pandas']
+)
+def test_user_defines_model_with_one_key(pandas_data, method_name):
     class MyRecord(KafkaRecord):
         value_1: str
         key_field: str
         __key_fields__ = {'key_field'}
 
-    record = MyRecord.from_pandas(pandas_data)[0]
+    from_pandas_method = getattr(MyRecord, method_name)
+    record = list(from_pandas_method(pandas_data))[0]
     assert record.key_fields == {'key_field'}
 
 
-def test_dynamic_defines_key_fields(pandas_data):
+@pytest.mark.parametrize(
+    'method_name',
+    ['from_pandas', 'iter_from_pandas']
+)
+def test_dynamic_defines_key_fields(pandas_data, method_name):
     model = PandasToRecordsTransformer(pandas_data, "MyRecord",
                                        key_fields={'key_field'})
-    record = model.from_pandas(pandas_data)[0]
+
+    from_pandas_method = getattr(model, method_name)
+    record = list(from_pandas_method(pandas_data))[0]
     assert record.key_fields == {'key_field'}
 
 
-def test_dynamic_defines_key_included(pandas_data):
+@pytest.mark.parametrize(
+    'method_name',
+    ['from_pandas', 'iter_from_pandas']
+)
+def test_dynamic_defines_key_included(pandas_data, method_name):
     model = PandasToRecordsTransformer(pandas_data, "MyRecord",
                                        key_fields={'key_field'},
                                        include_key=True)
-    record = model.from_pandas(pandas_data)[0]
+
+    from_pandas_method = getattr(model, method_name)
+    record = list(from_pandas_method(pandas_data))[0]
     assert record.include_key
 
 
-def test_dynamic_key_included_false_as_default(pandas_data):
+@pytest.mark.parametrize(
+    'method_name',
+    ['from_pandas', 'iter_from_pandas']
+)
+def test_dynamic_key_included_false_as_default(pandas_data, method_name):
     model = PandasToRecordsTransformer(pandas_data, "MyRecord",
                                        key_fields={'key_field'})
-    record = model.from_pandas(pandas_data)[0]
+
+    from_pandas_method = getattr(model, method_name)
+    record = list(from_pandas_method(pandas_data))[0]
     assert not record.include_key
+
+
+@pytest.mark.parametrize(
+    'method_name, expected_type',
+    [('from_pandas', list),
+     ('iter_from_pandas', Iterator)],
+    ids=['from_pandas', 'iter_from_pandas']
+)
+def test_user_defined_correct_iter(pandas_data, method_name, expected_type):
+    class MyRecord(KafkaRecord):
+        value_1: str
+        key_field: str
+        __key_fields__ = {'key_field'}
+
+    from_pandas_method = getattr(MyRecord, method_name)
+    result = from_pandas_method(pandas_data)
+    assert isinstance(result, expected_type)
+
+
+@pytest.mark.parametrize(
+    'method_name, expected_type',
+    [('from_pandas', list),
+     ('iter_from_pandas', Iterator)],
+    ids=['from_pandas', 'iter_from_pandas']
+)
+def test_dynamic_defined_correct_iter(pandas_data, method_name, expected_type):
+    model = PandasToRecordsTransformer(pandas_data, "MyRecord",
+                                       key_fields={'key_field'})
+
+    from_pandas_method = getattr(model, method_name)
+    result = from_pandas_method(pandas_data)
+    assert isinstance(result, expected_type)
 
 
 @pytest.fixture

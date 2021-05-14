@@ -27,14 +27,6 @@ from py2k.utils import (process_properties,
                         update_optional_schema)
 
 
-class IterableAdapter:
-    def __init__(self, iterator_factory):
-        self.iterator_factory = iterator_factory
-
-    def __iter__(self):
-        return self.iterator_factory()
-
-
 class KafkaRecord(BaseModel):
     __key_fields__: set = {}
     __include_key__: bool = False
@@ -52,10 +44,8 @@ class KafkaRecord(BaseModel):
 
     @classmethod
     def iter_from_pandas(cls, df: pd.DataFrame):
-        def iter_pandas(cls, df: pd.DataFrame):
-            for record in df.to_dict('records'):
-                yield cls(**record)
-        return IterableAdapter(lambda: iter_pandas(cls, df))
+        for record in df.to_dict('records'):
+            yield cls(**record)
 
     class Config:
         json_encoders = {
@@ -80,7 +70,7 @@ class KafkaRecord(BaseModel):
             update_optional_schema(schema=schema, model=model)
 
     @staticmethod
-    def schema_from_iter(iterator: IterableAdapter):
+    def schema_from_iter(iterator):
         return list(itertools.islice(iterator, 1))[0].schema_json()
 
     def value_to_avro_dict(self):
@@ -175,7 +165,7 @@ class PandasToRecordsTransformer:
         self._model = model_creator.create()
 
     def from_pandas(self, df: pd.DataFrame = None) -> List['KafkaRecord']:
-        """create list of KafkaModel objects from a pandas DataFrame
+        """Creates list of KafkaModel objects from a pandas DataFrame
 
         Args:
             df (pd.DataFrame): Pandas dataframe. Defaults to None.
@@ -197,6 +187,25 @@ class PandasToRecordsTransformer:
             return self._model.from_pandas(df)
 
         return self._model.from_pandas(self._df)
+
+    def iter_from_pandas(self, df: pd.DataFrame):
+        """Creates iterator of KafkaModel objects from a pandas DataFrame
+
+                Args:
+                    df (pd.DataFrame): Pandas dataframe. Defaults to None.
+
+                Returns:
+                    [List[KafkaModel]]: serialized list of KafkaModel objects
+
+                Examples:
+                    >>> record_transformer = PandasToRecordsTransformer(df=df,
+                                                                        record_name='KafkaRecord')
+                    >>> record_transformer.iter_from_pandas()
+                """
+        if df is not None:
+            return self._model.iter_from_pandas(df)
+
+        return self._model.iter_from_pandas(self._df)
 
     @staticmethod
     def _class(key_fields, include_key):
