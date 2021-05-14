@@ -152,6 +152,19 @@ def test_dynamic_defined_correct_iter(pandas_data, method_name, expected_type):
     assert isinstance(result, expected_type)
 
 
+@pytest.mark.parametrize(
+    'method_name',
+    ['from_pandas', 'iter_from_pandas']
+)
+def test_dynamic_creates_from_original_by_default(pandas_data, method_name):
+    model = PandasToRecordsTransformer(pandas_data, "MyRecord",
+                                       key_fields={'key_field'})
+
+    from_pandas_method = getattr(model, method_name)
+    record = list(from_pandas_method())[0]
+    assert not record.include_key
+
+
 @pytest.fixture
 def pandas_data():
     return pd.DataFrame({
