@@ -8,6 +8,15 @@
 
 <!-- prettier-ignore-end -->
 
+## v1.9.0 (2021-05-15)
+
+### Enhancement
+
+- ✨ Support for dynamic creation to return an iterator. [#67](https://github.com/AbsaOSS/py2k/pull/67) - [@vesely-david](https://github.com/vesely-david)
+
+  - User can choose whether to return list (from_pandas) or iterator (iter_from_pandas)
+  - KafkaWriter was adjusted accordingly to accept any iterable in it's write method
+
 ## v1.8.2 (2021-04-06)
 
 ### Bugs
