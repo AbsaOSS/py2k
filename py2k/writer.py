@@ -11,8 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from typing import Any, Dict, List
+from itertools import tee
+from typing import Any, Dict, Iterable
 
 from tqdm import tqdm
 
@@ -42,17 +42,16 @@ class KafkaWriter(object):
         self._schema_registry_config = schema_registry_config
         self._producer = None
 
-    def _create_producer(self, data: List[KafkaRecord]):
-        serializer = KafkaSerializer(data[0], self._schema_registry_config)
+    def _create_producer(self, record: KafkaRecord):
+        serializer = KafkaSerializer(record, self._schema_registry_config)
         producer_config = ProducerConfig(self._producer_config, serializer)
-
         self._producer = KafkaProducer(self._topic, producer_config)
 
-    def write(self, records: List[KafkaRecord], verbose: bool = False):
+    def write(self, records: Iterable[KafkaRecord], verbose: bool = False):
         """Writes data to Kafka.
 
         Args:
-            records (List[KafkaRecord]): Serialized `KafkaModel` objects
+            records (Iterable[KafkaRecord]): Serialized `KafkaModel` objects
             verbose (bool): Whether or not you want to show the loading bar
 
         Examples:
@@ -63,8 +62,11 @@ class KafkaWriter(object):
             >>> writer.write(records)
             100%|██████████| 4/4 [00:00<00:00,  7.69it/s]
         """
-        self._create_producer(records)
-        for record in (tqdm(records) if verbose else records):
+
+        for_first, records_copy = tee(records)
+        self._create_producer(next(for_first))
+
+        for record in (tqdm(records_copy) if verbose else records_copy):
             self._producer.produce(record)
 
         self._producer.flush()

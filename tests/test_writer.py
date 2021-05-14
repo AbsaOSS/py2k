@@ -69,7 +69,7 @@ def first_key_dict():
 
 
 @pytest.fixture
-def data_class(raw_input):
+def data_list(raw_input):
     class ModelResult(KafkaRecord):
         Customerkey: str
         Predictedvalue: float
@@ -82,7 +82,7 @@ def data_class(raw_input):
 
 
 @pytest.fixture
-def data_class_with_key(raw_input):
+def data_with_key_list(raw_input):
     class ModelResult(KafkaRecord):
         __key_fields__ = {'Customerkey'}
         Customerkey: str
@@ -113,7 +113,7 @@ def producer(monkeypatch):
     return producer
 
 
-def test_kafka_model(data_class):
+def test_kafka_model(data_list):
     expected = {
         'type': 'record',
                 'name': 'ModelResult',
@@ -125,15 +125,15 @@ def test_kafka_model(data_class):
                     {'type': 'string', 'name': 'Applicableto'},
                     {'type': 'string', 'format': 'date',
                      'name': 'Generationdate'}]}
-    actual = data_class[0].schema()
+    actual = data_list[0].schema()
     assert actual == expected
 
 
-def test_content(data_class):
-    assert data_class[0].Customerkey == 'Adam'
+def test_content(data_list):
+    assert data_list[0].Customerkey == 'Adam'
 
 
-def test_pandas_serializer(pandas_dataframe, data_class):
+def test_pandas_serializer(pandas_dataframe, data_list):
     class ModelResult(KafkaRecord):
         Customerkey: str
         Predictedvalue: float
@@ -141,18 +141,20 @@ def test_pandas_serializer(pandas_dataframe, data_class):
         Applicableto: str
         Generationdate: datetime.date
     actual = ModelResult.from_pandas(pandas_dataframe)
-    expected = data_class
+    expected = data_list
 
     assert actual == expected
 
 
+@pytest.mark.parametrize('iter_type', [list, iter])
 def test_pushes_one_record(producer,
-                           data_class_with_key,
+                           data_with_key_list,
                            first_value_dict_without_key,
-                           first_key_dict):
+                           first_key_dict,
+                           iter_type):
     topic = "DUMMY_TOPIC"
 
-    records = data_class_with_key[:1]
+    records = iter_type(data_with_key_list[:1])
 
     writer = KafkaWriter(topic, {}, {})
     writer.write(records)
@@ -165,11 +167,13 @@ def test_pushes_one_record(producer,
     producer.poll.assert_called_with(0)
 
 
+@pytest.mark.parametrize('iter_type', [list, iter])
 def test_pushes_one_record_without_key(producer,
-                                       data_class,
-                                       first_value_dict_with_key):
+                                       data_list,
+                                       first_value_dict_with_key,
+                                       iter_type):
     topic = "DUMMY_TOPIC"
-    records = data_class[:1]
+    records = iter_type(data_list[:1])
 
     writer = KafkaWriter(topic, {}, {})
     writer.write(records)
