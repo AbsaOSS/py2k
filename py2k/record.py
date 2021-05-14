@@ -17,7 +17,7 @@ import itertools
 import json
 import warnings
 from copy import deepcopy
-from typing import Any, Dict, List, Type, Set
+from typing import Any, Dict, List, Type, Set, Iterator
 
 import pandas as pd
 from pydantic import BaseModel
@@ -43,7 +43,7 @@ class KafkaRecord(BaseModel):
         return []
 
     @classmethod
-    def iter_from_pandas(cls, df: pd.DataFrame):
+    def iter_from_pandas(cls, df: pd.DataFrame) -> Iterator['KafkaRecord']:
         for record in df.to_dict('records'):
             yield cls(**record)
 
@@ -171,7 +171,7 @@ class PandasToRecordsTransformer:
             df (pd.DataFrame): Pandas dataframe. Defaults to None.
 
         Returns:
-            [List[KafkaModel]]: serialized list of KafkaModel objects
+            List[KafkaModel]: serialized list of KafkaModel objects
 
         Examples:
             >>> record_transformer = PandasToRecordsTransformer(df=df,
@@ -188,20 +188,20 @@ class PandasToRecordsTransformer:
 
         return self._model.from_pandas(self._df)
 
-    def iter_from_pandas(self, df: pd.DataFrame):
+    def iter_from_pandas(self, df: pd.DataFrame = None):
         """Creates iterator of KafkaModel objects from a pandas DataFrame
 
-                Args:
-                    df (pd.DataFrame): Pandas dataframe. Defaults to None.
+        Args:
+            df (pd.DataFrame): Pandas dataframe. Defaults to None.
 
-                Returns:
-                    [List[KafkaModel]]: serialized list of KafkaModel objects
+        Returns:
+            Iterator[KafkaModel]: serialized list of KafkaModel objects
 
-                Examples:
-                    >>> record_transformer = PandasToRecordsTransformer(df=df,
-                                                                        record_name='KafkaRecord')
-                    >>> record_transformer.iter_from_pandas()
-                """
+        Examples:
+            >>> record_transformer = PandasToRecordsTransformer(df=df,
+                                                                record_name='KafkaRecord')
+            >>> record_transformer.iter_from_pandas()
+        """
         if df is not None:
             return self._model.iter_from_pandas(df)
 
