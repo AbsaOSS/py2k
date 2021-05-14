@@ -165,6 +165,29 @@ def test_dynamic_creates_from_original_by_default(pandas_data, method_name):
     assert not record.include_key
 
 
+@pytest.mark.parametrize(
+    'method_name',
+    ['from_pandas', 'iter_from_pandas']
+)
+def test_empty_df_return_empty_iter(method_name):
+    class MyRecord(KafkaRecord):
+        value_1: str
+        value_2: int
+
+    df = pd.DataFrame({
+        'value_1': [],
+        'value_2': []
+    })
+    with pytest.warns(UserWarning) as warnings:
+        from_pandas_method = getattr(MyRecord, method_name)
+        records = list(from_pandas_method(df))
+
+    assert records == []
+    assert len(warnings) == 1
+    assert warnings[0].message.args[0] == "Unable to create kafka " \
+                                          "model from an empty dataframe."
+
+
 @pytest.fixture
 def pandas_data():
     return pd.DataFrame({

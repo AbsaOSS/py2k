@@ -33,19 +33,17 @@ class KafkaRecord(BaseModel):
 
     @classmethod
     def from_pandas(cls, df: pd.DataFrame) -> List['KafkaRecord']:
-        records = df.to_dict('records')
-
-        if records:
-            return [cls(**item) for item in records]
-
-        warnings.warn(
-            "Unable to create kafka model from an empty dataframe.")
-        return []
+        return list(cls.iter_from_pandas(df))
 
     @classmethod
     def iter_from_pandas(cls, df: pd.DataFrame) -> Iterator['KafkaRecord']:
-        for record in df.to_dict('records'):
-            yield cls(**record)
+        records = df.to_dict('records')
+
+        if not records:
+            warnings.warn(
+                "Unable to create kafka model from an empty dataframe.")
+
+        return (cls(**item) for item in records)
 
     class Config:
         json_encoders = {
