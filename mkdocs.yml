@@ -30,6 +30,7 @@ nav:
   - Tutorial - User Guide:
       - Tutorial - User Guide - Intro: tutorial/index.md
       - First Steps: tutorial/first_steps.md
+      - Security: tutorial/security.md
   - API Reference: reference.md
   - Motivation: motivation.md
   - Release Notes: release_notes.md
