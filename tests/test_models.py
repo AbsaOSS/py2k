@@ -15,7 +15,6 @@ from collections import Iterator
 from unittest.mock import MagicMock, ANY
 import datetime as dt
 
-import numpy as np
 import pandas as pd
 from pandas._testing import assert_frame_equal
 import pytest
@@ -192,7 +191,8 @@ def test_empty_df_return_empty_iter(method_name):
 
 @pytest.mark.parametrize(
     'value',
-    ['bla', 12, -20., False, dt.date(2020, 1, 1), dt.datetime(2020, 1, 1, 0, 0, 0)],
+    ['bla', 12, -20., False, dt.date(2020, 1, 1),
+     dt.datetime(2020, 1, 1, 0, 0, 0)],
     ids=['str', 'int', 'float', 'bool', 'date', 'datetime']
 )
 def test_dynamic_with_null_first_row(value):
@@ -203,6 +203,20 @@ def test_dynamic_with_null_first_row(value):
     records = model.from_pandas()
     assert pd.isna(records[0].a)  # pd.isna(None) == true
     assert records[1].a == value
+
+
+def test_one_column_all_nulls():
+    df = pd.DataFrame({
+        'non_empty_col': [1, 2],
+        'empty_col': [None, None]
+    })
+
+    with pytest.raises(ValueError) as exception_info:
+        model = PandasToRecordsTransformer(df, "MyRecord",
+                                           optional_fields=['a'])
+        model.from_pandas()
+
+    assert "Invalid type for field 'empty_col'" in str(exception_info.value)
 
 
 @pytest.fixture

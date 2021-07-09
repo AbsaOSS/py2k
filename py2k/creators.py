@@ -98,13 +98,14 @@ class PandasModelCreator(ModelCreator):
         sample_record = {
             col: self._sample_col(col) for col in self._df.columns
         }
-
         return self._create_model(sample_record)
 
     def _sample_col(self, col):
-        return self._df[[col]]\
-                .dropna()\
-                .to_dict('records')[0][col]
+        without_na = self._df[col].dropna()
+        if without_na.empty:
+            return None
+
+        return without_na.tolist()[0]
 
     def _create_model(self, record):
         def field_definition(field_name: str, field_value: Any):
