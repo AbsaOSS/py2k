@@ -13,7 +13,9 @@
 # limitations under the License.
 from collections import Iterator
 from unittest.mock import MagicMock, ANY
+import datetime as dt
 
+import numpy as np
 import pandas as pd
 from pandas._testing import assert_frame_equal
 import pytest
@@ -189,18 +191,18 @@ def test_empty_df_return_empty_iter(method_name):
 
 
 @pytest.mark.parametrize(
-    'method_name',
-    ['from_pandas', 'iter_from_pandas']
+    'value',
+    ['bla', 12, -20., False, dt.date(2020, 1, 1), dt.datetime(2020, 1, 1, 0, 0, 0)],
+    ids=['str', 'int', 'float', 'bool', 'date', 'datetime']
 )
-def test_dynamic_with_null_row(method_name):
-    df = pd.DataFrame({'a': [None, "bla"]})
+def test_dynamic_with_null_first_row(value):
+    df = pd.DataFrame({'a': [None, value]})
 
     model = PandasToRecordsTransformer(df, "MyRecord", optional_fields=['a'])
 
-    from_pandas_method = getattr(model, method_name)
-    records = list(from_pandas_method())
-    assert records[0].a is None
-    assert records[1].a == "bla"
+    records = model.from_pandas()
+    assert pd.isna(records[0].a)  # pd.isna(None) == true
+    assert records[1].a == value
 
 
 @pytest.fixture
