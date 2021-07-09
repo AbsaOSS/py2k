@@ -188,6 +188,21 @@ def test_empty_df_return_empty_iter(method_name):
                                           "model from an empty dataframe."
 
 
+@pytest.mark.parametrize(
+    'method_name',
+    ['from_pandas', 'iter_from_pandas']
+)
+def test_dynamic_with_null_row(method_name):
+    df = pd.DataFrame({'a': [None, "bla"]})
+
+    model = PandasToRecordsTransformer(df, "MyRecord", optional_fields=['a'])
+
+    from_pandas_method = getattr(model, method_name)
+    records = list(from_pandas_method())
+    assert records[0].a is None
+    assert records[1].a == "bla"
+
+
 @pytest.fixture
 def pandas_data():
     return pd.DataFrame({
