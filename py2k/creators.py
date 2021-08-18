@@ -91,14 +91,21 @@ class PandasModelCreator(ModelCreator):
         self._base = base
 
     def create(self):
-        records_as_dict_list = self._df.to_dict('records')
-        if records_as_dict_list:
-            sample_record = records_as_dict_list[0]
-            model = self._create_model(sample_record)
-            return model
-        else:
+        if self._df.empty:
             raise ValueError(
                 "Unable to create kafka model from an empty dataframe.")
+
+        sample_record = {
+            col: self._sample_col(col) for col in self._df.columns
+        }
+        return self._create_model(sample_record)
+
+    def _sample_col(self, col):
+        without_na = self._df[col].dropna()
+        if without_na.empty:
+            return None
+
+        return without_na.tolist()[0]
 
     def _create_model(self, record):
         def field_definition(field_name: str, field_value: Any):
