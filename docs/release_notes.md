@@ -8,6 +8,12 @@
 
 <!-- prettier-ignore-end -->
 
+## v1.9.1 (2021-10-04)
+
+### Bug
+
+- 🐛 Kafka Schema was not extracted from entire Dataframe. [#76](https://github.com/AbsaOSS/py2k/pull/76) - [@vesely-david](https://github.com/vesely-david)
+
 ## v1.9.0 (2021-05-15)
 
 ### Enhancement
