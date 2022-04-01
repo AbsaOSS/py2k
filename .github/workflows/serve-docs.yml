@@ -12,7 +12,7 @@ jobs:
         run: |
             echo "PYTHONPATH=/home/runner/work/py2k/py2k" >> $GITHUB_ENV
             echo "/home/runner/work/py2k/py2k/py2k" >> $GITHUB_PATH
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - uses: actions/setup-python@v2
         with:
           python-version: 3.6
